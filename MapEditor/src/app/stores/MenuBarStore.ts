@@ -38,8 +38,8 @@ export class MenuItem
 	{
 		this._name = name;
 		const _children = Array.isArray(actionOrChildren) ? actionOrChildren : children;
-		const _action = typeof actionOrChildren === "function" ? actionOrChildren : () => {};
-		
+		const _action = typeof actionOrChildren === "function" ? actionOrChildren : () => { };
+
 		this._action = _action;
 		this._children = _children;
 		this._children.forEach((c, i) => 
@@ -50,7 +50,7 @@ export class MenuItem
 				c._parent = this;
 			}
 		});
-		
+
 		makeAutoObservable(this);
 	}
 
@@ -118,22 +118,19 @@ export class MenuBarStore extends Store<MenuItem[]>
 	private _selected: MenuItem | null = null;
 
 	@computed
-	public get isActive() { return this._isActive; }
+	public get isActive() { return this._isActive && (this._selected !== null); }
 
 	@computed
 	public get menuItems() { return this._menuItems; }
 
 	@action
-	public setActive(active: boolean)
+	public setActive = (active: boolean) =>
 	{
-		if (active != this._isActive)
+		this._isActive = active;
+		if (!active)
 		{
-			this._isActive = active;
-			if (!active)
-			{
-				this.deactivateSelected();
-				this._selected = null;
-			}
+			this.deactivateSelected();
+			this._selected = null;
 		}
 	}
 
@@ -208,6 +205,7 @@ export class MenuBarStore extends Store<MenuItem[]>
 						if (next != this._selected)
 						{
 							this._selected.setSelected(false);
+							this._selected.setActive(false);
 							this._selected = next;
 							next.setSelected(true);
 						}
@@ -235,6 +233,7 @@ export class MenuBarStore extends Store<MenuItem[]>
 						if (next != this._selected)
 						{
 							this._selected.setSelected(false);
+							this._selected.setActive(false);
 							this._selected = next;
 							next.setSelected(true);
 						}
@@ -262,6 +261,18 @@ export class MenuBarStore extends Store<MenuItem[]>
 							this._selected = firstItem;
 							this._selected.setSelected(true);
 						}
+					}
+					else
+					{
+						let root = this._selected;
+						while (root.parent !== null)
+							root = root.parent;
+						let next = root.id + 1;
+						if (next >= this.menuItems.length)
+							next = 0;
+						this.deactivateSelected();
+						this._selected = this._menuItems[next];
+						this._selected.setSelected(true);
 					}
 					e.preventDefault();
 					break;
@@ -295,16 +306,14 @@ export class MenuBarStore extends Store<MenuItem[]>
 	private readonly onClick = (e: MouseEvent) =>
 	{
 		if (!e.composedPath().find((el) => "classList" in el && (el as HTMLElement).classList.contains("menu-bar")))
-		{
-			this.deactivateSelected();
 			this.setActive(false);
-		}
 	}
 
 	@action
 	public readonly onMenuItemClick = (e: React.MouseEvent, menuItem: MenuItem) => 
 	{
 		e.preventDefault();
+		e.stopPropagation();
 
 		if (menuItem.parent == null)
 		{
@@ -329,7 +338,8 @@ export class MenuBarStore extends Store<MenuItem[]>
 			}
 			else if (menuItem.action)
 			{
-				menuItem.action(menuItem)
+				menuItem.action(menuItem);
+				this.setActive(false);
 			}
 		}
 		else if (menuItem.children.length > 0)
@@ -338,13 +348,15 @@ export class MenuBarStore extends Store<MenuItem[]>
 			menuItem.setActive(true);
 			this.setActive(true);
 		}
-		else if (menuItem.action)
+		else
 		{
-			menuItem.action(menuItem)
+			menuItem.action(menuItem);
+			this.setActive(false);
 		}
 	}
 
-	private deactivateSelected()
+	@action
+	private deactivateSelected = () =>
 	{
 		if (this._selected)
 		{
@@ -385,7 +397,6 @@ export class MenuBarStore extends Store<MenuItem[]>
 
 	private readonly onBlur = () =>
 	{
-		this.deactivateSelected();
 		this.setActive(false);
 	}
 }
