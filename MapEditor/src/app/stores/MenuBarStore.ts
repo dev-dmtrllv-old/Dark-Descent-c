@@ -317,7 +317,11 @@ export class MenuBarStore extends Store<MenuItem[]>
 
 		if (menuItem.parent == null)
 		{
-			if (this._isActive)
+			if(this._selected === menuItem)
+			{
+				this.setActive(false);
+			}
+			else if (this._isActive)
 			{
 				if (this._activeRootItem != menuItem)
 				{
