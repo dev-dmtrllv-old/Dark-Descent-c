@@ -1,4 +1,5 @@
 import { MenuItem, MENU_SEPERATOR } from "./stores/MenuBarStore";
+import { ipcRenderer } from "electron";
 
 export const MENU_ITEMS = [
 	new MenuItem("File", [
@@ -15,6 +16,8 @@ export const MENU_ITEMS = [
 		new MenuItem("Save Map As...", []),
 	]),
 	new MenuItem("Edit", []),
-	new MenuItem("View", []),
+	new MenuItem("View", [
+		new MenuItem("Toggle Developer Window", () => ipcRenderer.send("toggle-dev-window")),
+	]),
 	new MenuItem("Help", []),
 ];

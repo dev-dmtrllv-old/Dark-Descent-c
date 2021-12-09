@@ -30,10 +30,18 @@ ipcMain.on("ready", (e, ...args) =>
 		win.maximize();
 		win.show();
 		win.webContents.openDevTools();
-		fs.watch("./dist/app/js", {  }, () => win.webContents.reload());
-		fs.watch("./dist/app/css", {  }, () => win.webContents.reload());
-		fs.watch("./dist/app/index.html", {  }, () => win.webContents.reload());
+		fs.watch("./dist/app/js", {}, () => win.webContents.reload());
+		fs.watch("./dist/app/css", {}, () => win.webContents.reload());
+		fs.watch("./dist/app/index.html", {}, () => win.webContents.reload());
 	}
 });
+
+ipcMain.on("toggle-dev-window", () => 
+{
+	if (!win.webContents.isDevToolsOpened())
+		win.webContents.openDevTools();
+	else
+		win.webContents.closeDevTools();
+})
 
 app.on("quit", () => app.quit());
