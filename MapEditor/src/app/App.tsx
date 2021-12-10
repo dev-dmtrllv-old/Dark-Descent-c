@@ -6,6 +6,7 @@ import { WorkArea } from "./components/WorkArea";
 import { SideBar } from "./components/SideBar";
 import { BottomPanel } from "./components/BottomPanel";
 import { Editor } from "./editor/Editor";
+import { Dialog } from "./components/Dialog";
 
 const App = ({ }) =>
 {
@@ -45,6 +46,7 @@ const App = ({ }) =>
 					</FlexBox>
 				</FlexItem>
 			</FlexBox>
+			<Dialog />
 		</View>
 	);
 };

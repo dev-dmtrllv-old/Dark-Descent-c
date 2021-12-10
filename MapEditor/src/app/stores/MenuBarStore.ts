@@ -1,6 +1,6 @@
 import { action, computed, makeAutoObservable, observable } from "mobx";
 import React from "react";
-import { Store } from "./Store";
+import { InitializableStore, Store } from "./Store";
 
 export type MenuItemAction = (menuItem: MenuItem) => void;
 
@@ -101,7 +101,7 @@ export class MenuItem
 	}
 };
 
-export class MenuBarStore extends Store<MenuItem[]>
+export class MenuBarStore extends InitializableStore<MenuItem[]>
 {
 	private static findFirstMenuItem(children: MenuItemType[]): MenuItem | null
 	{
@@ -109,7 +109,7 @@ export class MenuBarStore extends Store<MenuItem[]>
 	}
 
 	@observable
-	private _menuItems: MenuItem[];
+	private _menuItems: MenuItem[] = [];
 
 	@observable
 	private _isActive: boolean = false;
@@ -133,16 +133,16 @@ export class MenuBarStore extends Store<MenuItem[]>
 			this._selected = null;
 		}
 	}
-
-	public constructor(menuItems: MenuItem[] = [])
+	
+	protected init = (menuItems: MenuItem[]): void =>
 	{
-		super(menuItems);
 		this._menuItems = menuItems;
 		window.addEventListener("keydown", (e) => this.onKeyDown(e));
 		window.addEventListener("click", (e) => this.onClick(e));
 		window.addEventListener("blur", (e) => this.onBlur());
 		this._menuItems.forEach((item, i) => item["_id"] = i);
 	}
+	
 
 	private readonly onKeyDown = (e: KeyboardEvent) =>
 	{

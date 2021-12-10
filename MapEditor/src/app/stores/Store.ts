@@ -1,13 +1,12 @@
-export class Store<Props>
-{
-	public readonly props: Readonly<Props>;
+export abstract class Store {}
 
-	public constructor(props: Props)
-	{
-		this.props = props as any;
-	}
+export abstract class InitializableStore<Props extends {}> extends Store
+{
+	protected abstract init: (props: Props) => void;
 }
 
-export type StoreType<T extends Store<any>> = new (props: any) => T;
+export type StoreType<T extends Store> = new (props: any) => T;
 
-export type InferStoreProps<T> = T extends Store<infer P> ? P : never;
+export type InitStoreType<T extends InitializableStore<any>> = new () => T;
+
+export type InferStoreProps<T extends InitializableStore<any>> = T extends InitializableStore<infer P> ? P : never;

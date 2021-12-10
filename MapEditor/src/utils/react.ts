@@ -1,3 +1,4 @@
+import React from "react";
 import { toSnakeCase } from "./string";
 
 export const getClassFromProps = (cn: string, { className, ...props }: { [key: string]: any } = {}) =>
@@ -11,4 +12,10 @@ export const getClassFromProps = (cn: string, { className, ...props }: { [key: s
 			cn += ` ${toSnakeCase(prop)}-${toSnakeCase(props[prop])}`;
 	}
 	return className ? `${className} ${cn}` : cn;
+}
+
+export const stopMouseEvents = (e: React.MouseEvent) =>
+{
+	e.preventDefault();
+	e.stopPropagation();
 }
