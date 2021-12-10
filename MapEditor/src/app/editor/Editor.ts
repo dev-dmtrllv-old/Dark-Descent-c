@@ -1,15 +1,24 @@
 import { action, computed, makeAutoObservable, observable } from "mobx";
+import { observer } from "mobx-react-lite";
+import React from "react";
 import { CanvasRenderer } from "./CanvasRenderer";
 import { Map } from "./Map"
 
 export class Editor
 {
+	public static withStore<P extends {} = {}>(component: React.FC<P & { editor: Editor }>)
+	{
+		return (props: P) => React.createElement(observer(component), { ...props, editor: Editor._instance }); 
+	}
+
 	private static _instance = new Editor();
 
 	public static get() { return this._instance; };
 
 	@observable
-	private _maps: Map[] = [];
+	private _maps: Map[] = [
+		new Map("test")
+	];
 
 	@observable
 	private _activeMap: Map | null = null;
@@ -18,6 +27,7 @@ export class Editor
 
 	private constructor()
 	{
+		this._activeMap = this._maps[0];
 		makeAutoObservable(this);
 	}
 
@@ -42,7 +52,10 @@ export class Editor
 
 	public render()
 	{
-		if (this.canvasRenderer.ctx)
-			this.activeMap?.renderer.render(this.canvasRenderer.ctx);
+		if (this.activeMap)
+		{
+			this.activeMap?.renderer.render();
+			this.canvasRenderer.render(this.activeMap);
+		}
 	}
 }

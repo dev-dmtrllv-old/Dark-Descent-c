@@ -5,12 +5,22 @@ import { MenuBar } from "./components/MenuBar";
 import { WorkArea } from "./components/WorkArea";
 import { SideBar } from "./components/SideBar";
 import { BottomPanel } from "./components/BottomPanel";
+import { Editor } from "./editor/Editor";
 
 const App = ({ }) =>
 {
+	const editor = Editor.get();
+	
 	React.useEffect(() => 
 	{
 		ipcRenderer.send("ready");
+		
+		editor.canvasRenderer.onMount();
+
+		return () => 
+		{
+			editor.canvasRenderer.onUnmount();
+		};
 	}, []);
 
 	return (

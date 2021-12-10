@@ -1,5 +1,6 @@
 import React from "react";
 import { Editor } from "./Editor";
+import { Map } from "./Map";
 
 export class CanvasRenderer
 {
@@ -7,7 +8,7 @@ export class CanvasRenderer
 
 	public get canvas() { return this.canvasRef.current; }
 
-	private _ctx: ImageBitmapRenderingContext | null = null;
+	private _ctx: CanvasRenderingContext2D | null = null;
 
 	public get ctx() { return this._ctx; }
 
@@ -17,10 +18,10 @@ export class CanvasRenderer
 	{
 		if (this.canvas && this.canvas.parentElement)
 		{
-			this._ctx = this.canvas.getContext("bitmaprenderer");
+			this._ctx = this.canvas.getContext("2d");
 
 			if (!this.ctx)
-				throw ("Could not get bitmaprenderer context!");
+				throw ("Could not get 2D context!");
 
 			this.resizeObserver.observe(this.canvas.parentElement);
 
@@ -28,8 +29,9 @@ export class CanvasRenderer
 		}
 	}
 
-	public onUnmount()
+	public onUnmount = () =>
 	{
+		console.log("unmount");
 		this._ctx = null;
 	}
 
@@ -37,12 +39,13 @@ export class CanvasRenderer
 	{
 		if(this.canvas && this.canvas.parentElement)
 		{
+			const editor = Editor.get();
 			const p = this.canvas.parentElement;
 			
 			this.canvas.style.width = (this.canvas.width = p.clientWidth) + "px";
 			this.canvas.style.height = (this.canvas.height = p.clientHeight) + "px";
 			
-			Editor.get().render();
+			editor.render();
 		}
 	}
 
@@ -50,4 +53,16 @@ export class CanvasRenderer
 	{
 		this.onResize();
 	});
+
+	public render(map: Map)
+	{
+		const ctx = this.ctx;
+		
+		if(this.canvas && ctx)
+		{
+			const { clientWidth, clientHeight } = this.canvas;
+			ctx.clearRect(0, 0, clientWidth, clientHeight);
+			ctx.drawImage(map.renderer.canvas, 0, 0);
+		}
+	}
 }
