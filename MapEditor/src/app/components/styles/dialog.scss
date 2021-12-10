@@ -9,7 +9,7 @@
 	.dialog {
 		border-radius: 6px;
 		opacity: 0;
-		transition: $anim-speed;
+		transition: opacity $anim-speed;
 		top: -10%;
 		overflow: hidden;
 		border: 1px solid #3a3a3a;

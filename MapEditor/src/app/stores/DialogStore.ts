@@ -14,7 +14,7 @@ export class DialogStore extends InitializableStore<InitDialogProps>
 		},
 		max: {
 			width: "90vw",
-			height: "90vw",
+			height: "90vh",
 		}
 	};
 
