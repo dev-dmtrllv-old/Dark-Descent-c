@@ -9,8 +9,8 @@
 	.dialog {
 		border-radius: 6px;
 		opacity: 0;
-		transition: opacity $anim-speed;
-		top: -10%;
+		transition: top $anim-speed, opacity $anim-speed;
+		top: 0%;
 		overflow: hidden;
 		border: 1px solid #3a3a3a;
 		
@@ -59,10 +59,6 @@
 					opacity: 1;
 				}
 			}
-		}
-
-		.body {
-			padding: 15px 35px;
 		}
 	}
 

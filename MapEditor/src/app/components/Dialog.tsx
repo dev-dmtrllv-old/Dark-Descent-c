@@ -1,10 +1,18 @@
 import { DialogStore } from "app/stores/DialogStore";
 import { RootStore } from "app/stores/RootStore";
 import { FlexBox, FlexItem, View } from "app/views";
+import { observer } from "mobx-react";
 import React from "react";
 import { utils } from "utils";
 
 import "./styles/dialog.scss";
+
+export const dialogComponent = <Props extends {}>(component: React.FC<Props & { dialog: DialogStore }>) =>
+{
+	const Component = observer(component);
+	return (props: Props) => <Component {...props} dialog={RootStore.get(DialogStore)}/>
+};
+
 
 const DialogCloseBtn: React.FC<DialogCloseBtnProps> = ({ onClick }) => (
 	<View className="close-btn" position="absolute" onClick={() => onClick()}>
@@ -15,7 +23,7 @@ const DialogCloseBtn: React.FC<DialogCloseBtnProps> = ({ onClick }) => (
 export const Dialog = RootStore.use(DialogStore, ({ store }) =>
 {
 	return (
-		<View position="absolute" theme="custom" fill className={utils.react.getClassFromProps("dialog-wrapper", { open: store.isOpen })} onClick={() => store.close()}>
+		<View position="absolute" theme="custom" fill className={utils.react.getClassFromProps("dialog-wrapper", { open: store.isOpen })} onClick={() => store.options.closable && store.close()}>
 			<View position="absolute" theme="primary" center className="dialog" onClick={utils.react.stopMouseEvents} style={store.style}>
 				<FlexBox dir="vertical" fill>
 					<FlexItem className="top-bar" base={64}>

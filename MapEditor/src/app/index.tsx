@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import App from "./App";
+import { OpenMapDialog } from "./dialogs/OpenMapDialog";
 import { MENU_ITEMS } from "./menu-items";
 import { DialogStore } from "./stores/DialogStore";
 import { MenuBarStore } from "./stores/MenuBarStore";
@@ -21,10 +22,16 @@ exec(async () =>
 	RootStore.init(MenuBarStore, MENU_ITEMS);
 	RootStore.init(DialogStore, {
 		open: true,
-		component: Test,
+		component: OpenMapDialog,
 		title: "Open Map",
 		options: {
 			closable: false
+		},
+		size: {
+			max: {
+				width: "920px",
+				height: "720px"
+			}
 		}
 	});
 

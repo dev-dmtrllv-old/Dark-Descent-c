@@ -1,4 +1,3 @@
-import { Vector2 } from "app/editor/Vector2";
 import { action, computed, observable } from "mobx";
 import React from "react";
 import { InitializableStore } from "./Store";
@@ -9,8 +8,8 @@ export class DialogStore extends InitializableStore<InitDialogProps>
 		width: "70vw",
 		height: "65vh",
 		min: {
-			width: "600px",
-			height: "400px"
+			width: "320px",
+			height: "200px"
 		},
 		max: {
 			width: "90vw",
@@ -22,7 +21,7 @@ export class DialogStore extends InitializableStore<InitDialogProps>
 		closable: true,
 	};
 
-	public static mergeSize(size: PanelSize): Required<PanelSize> { return { ...this.defaultSize, ...size }; }
+	public static mergeSize(size: Partial<PanelSize>): Required<PanelSize> { return { ...this.defaultSize, ...size }; }
 	public static mergeOptions(options: DialogOptions): Required<DialogOptions> { return { ...this.defaultOptions, ...options }; }
 
 	@observable
@@ -35,6 +34,7 @@ export class DialogStore extends InitializableStore<InitDialogProps>
 
 	private _size: Required<PanelSize> = DialogStore.defaultSize;
 
+	@observable
 	private _options: DialogOptions = DialogStore.defaultOptions;
 
 
@@ -48,8 +48,12 @@ export class DialogStore extends InitializableStore<InitDialogProps>
 
 	public get size() { return this._size; }
 
+	@computed
 	public get options() { return this._options; }
-	
+
+	@computed
+	public get isClosable() { return this._options.closable; }
+
 	@computed
 	public get style(): React.CSSProperties
 	{
@@ -71,23 +75,39 @@ export class DialogStore extends InitializableStore<InitDialogProps>
 			this.open(props.component, props.title, props.size, props.options);
 	}
 
-
 	@action
-	public readonly open = (component: React.FC, title: string, size?: PanelSize, options?: DialogOptions) =>
+	public readonly open = (component: React.FC, title: string, size?: Partial<PanelSize>, options?: DialogOptions) =>
 	{
 		this._isOpen = true;
 		this._component = component;
 		this._title = title;
 		if (size)
 			this._size = DialogStore.mergeSize(size);
-		if(options)
+		if (options)
 			this._options = DialogStore.mergeOptions(options);
 	}
 
-	@action
-	public readonly close = () =>
+	public readonly close = (force: boolean = false) =>
 	{
-		this._isOpen = false;
+		if (!this._isOpen || (!this.isClosable && !force))
+			return;
+
+		this.setOpen(false);
+	}
+
+	@action
+	public setOpen(open: boolean) { this._isOpen = open; }
+
+	@action
+	private updateOptions(options: Partial<DialogOptions>)
+	{
+		this._options = { ...this._options, ...options };
+	}
+
+	public setClosable(closable: boolean)
+	{
+		if(closable != this._options.closable)
+			this.updateOptions({ closable });
 	}
 }
 
@@ -97,7 +117,7 @@ type InitDialogProps = {
 	open: true;
 	component: React.FC;
 	title: string;
-	size?: PanelSize;
+	size?: Partial<PanelSize>;
 	options?: DialogOptions;
 };
 
