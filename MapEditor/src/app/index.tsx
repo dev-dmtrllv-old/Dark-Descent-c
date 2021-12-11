@@ -1,16 +1,13 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import App from "./App";
-import { OpenMapDialog } from "./dialogs/OpenMapDialog";
+import { OpenDialog } from "./dialogs/OpenDialog";
 import { MENU_ITEMS } from "./menu-items";
 import { DialogStore } from "./stores/DialogStore";
 import { MenuBarStore } from "./stores/MenuBarStore";
+import { OpenDialogStore } from "./stores/OpenDialogStore";
 import { RootStore } from "./stores/RootStore";
-import { View } from "./views";
-
 const exec = (callback: Function) => callback();
-
-const Test = () => <View><h1>Test</h1></View>;
 
 exec(async () => 
 {
@@ -22,7 +19,7 @@ exec(async () =>
 	RootStore.init(MenuBarStore, MENU_ITEMS);
 	RootStore.init(DialogStore, {
 		open: true,
-		component: OpenMapDialog,
+		component: OpenDialog,
 		title: "Open Map",
 		options: {
 			closable: false
@@ -34,6 +31,7 @@ exec(async () =>
 			}
 		}
 	});
+	RootStore.init(OpenDialogStore, {});
 
 	try
 	{
