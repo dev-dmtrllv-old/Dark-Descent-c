@@ -3,13 +3,14 @@ import { OpenDialogStore } from "app/stores/OpenDialogStore";
 import { useStore, useStores } from "app/stores/Store";
 import { Button, FlexBox, FlexItem, View } from "app/views";
 import React from "react";
+import { utils } from "utils";
 
 import "./styles/open-dialog.scss";
 
 const NoProjectFound = useStore(OpenDialogStore, ({ store }) => (
 	<View className="not-found">
 		<View className="text">No recent projects found!</View>
-		<Button>Open Project</Button>
+		<Button onClick={store.openProject}>Open Project</Button>
 	</View>
 ));
 
@@ -17,7 +18,12 @@ const ProjectList = useStore(OpenDialogStore, ({ store }) =>
 {
 	return (
 		<View>
-			List
+			{store.projects.map((p, i) => (
+				<View key={i} className={utils.react.getClassFromProps("item", { selected: store.selectedProject === p })}>
+					<View>{p.name}</View>
+					<View>{p.path}</View>
+				</View>
+			))}
 		</View>
 	);
 });

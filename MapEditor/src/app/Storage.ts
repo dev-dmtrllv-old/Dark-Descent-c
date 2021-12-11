@@ -7,7 +7,7 @@ export class Storage<T extends StorageTypeMap>
 
 	public constructor(namespace: string, typeMap: T)
 	{
-		if(Storage.storageCells[namespace])
+		if (Storage.storageCells[namespace])
 			throw new Error(`Storage with namespace ${namespace} already`);
 
 		this.typeMap = typeMap;
@@ -16,12 +16,17 @@ export class Storage<T extends StorageTypeMap>
 		Storage.storageCells[namespace] = this;
 	}
 
-	public readonly get = <K extends keyof T>(key: K): CastType<T[K]> | null => 
+	public get<K extends keyof T>(key: K): (CastType<T[K]> | null);
+	public get<K extends keyof T>(key: K, defaultValue: CastType<T[K]>): CastType<T[K]>;
+	public get<K extends keyof T>(key: K, defaultValue: CastType<T[K]> | null = null): CastType<T[K]> | null
 	{
 		const d = localStorage.getItem(`${this.namespace}.${key as string}`);
 		if (!d)
-			return null;
-		return TYPE_CASTERS[this.typeMap[key]](key) as CastType<T[K]>;
+		{
+			this.set(key, defaultValue as any);
+			return defaultValue;
+		}
+		return TYPE_CASTERS[this.typeMap[key]](d) as CastType<T[K]>;
 	};
 
 	public readonly set = <K extends keyof T>(key: K, data: CastType<T[K]>) => 

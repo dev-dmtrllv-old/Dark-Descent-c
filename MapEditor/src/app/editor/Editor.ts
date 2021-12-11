@@ -16,9 +16,7 @@ export class Editor
 	public static get() { return this._instance; };
 
 	@observable
-	private _maps: Map[] = [
-		new Map("test")
-	];
+	private _openMaps: Map[] = [];
 
 	@observable
 	private _activeMap: Map | null = null;
@@ -27,12 +25,12 @@ export class Editor
 
 	private constructor()
 	{
-		this._activeMap = this._maps[0];
+		this._activeMap = this._openMaps[0];
 		makeAutoObservable(this);
 	}
 
 	@computed
-	public get openMapNames() { return this._maps.map(m => m.name); }
+	public get openMapNames() { return this._openMaps.map(m => m.name); }
 
 	@computed
 	public get activeMapName() { return this._activeMap?.name || ""; }
@@ -40,15 +38,7 @@ export class Editor
 	@computed
 	public get activeMap() { return this._activeMap; }
 
-	public getMap(name: string): Map | null { return this._maps.find(m => m.name === name) || null; }
-
-	@action
-	public addMap(name: string)
-	{
-		const maps = [...this._maps];
-		maps.push(new Map(name));
-		this._maps = maps;
-	}
+	public getMap(name: string): Map | null { return this._openMaps.find(m => m.name === name) || null; }
 
 	public render()
 	{
@@ -57,5 +47,10 @@ export class Editor
 			this.activeMap?.renderer.render();
 			this.canvasRenderer.render(this.activeMap);
 		}
+	}
+
+	public addToOpenMaps(map: Map)
+	{
+		this._openMaps = [map, ...this._openMaps];
 	}
 }

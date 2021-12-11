@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import fs from "fs";
 
 (process.env as any)["ELECTRON_DISABLE_SECURITY_WARNINGS"] = true;
@@ -42,6 +42,8 @@ ipcMain.on("toggle-dev-window", () =>
 		win.webContents.openDevTools();
 	else
 		win.webContents.closeDevTools();
-})
+});
+
+ipcMain.handle("open-dir", async (e) => await dialog.showOpenDialog(BrowserWindow.fromWebContents(e.sender), { properties: ["openDirectory"] }));
 
 app.on("quit", () => app.quit());

@@ -7,6 +7,7 @@ import { DialogStore } from "./stores/DialogStore";
 import { MenuBarStore } from "./stores/MenuBarStore";
 import { OpenDialogStore } from "./stores/OpenDialogStore";
 import { RootStore } from "./stores/RootStore";
+import { SettingsStore } from "./stores/SettingsStore";
 const exec = (callback: Function) => callback();
 
 exec(async () => 
@@ -16,13 +17,15 @@ exec(async () =>
 
 	document.body.appendChild(root);
 
-	RootStore.init(MenuBarStore, MENU_ITEMS);
-	RootStore.init(DialogStore, {
+	const settingsStore = RootStore.init(SettingsStore, {});
+	const menuBarStore = RootStore.init(MenuBarStore, MENU_ITEMS);
+	const openDialogStore = RootStore.init(OpenDialogStore, {});
+	const dialogStore = RootStore.init(DialogStore, {
 		open: true,
 		component: OpenDialog,
 		title: "Open Map",
 		options: {
-			closable: false
+			closable: openDialogStore.hasProjects
 		},
 		size: {
 			max: {
@@ -31,7 +34,6 @@ exec(async () =>
 			}
 		}
 	});
-	RootStore.init(OpenDialogStore, {});
 
 	try
 	{

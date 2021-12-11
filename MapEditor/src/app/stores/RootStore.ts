@@ -7,7 +7,7 @@ export class RootStore
 {
 	private static readonly stores: Store[] = [];
 
-	public static init<T extends InitializableStore<any>>(type: InitStoreType<T>, props: InferStoreProps<T>)
+	public static init<T extends InitializableStore<any>>(type: InitStoreType<T>, props: InferStoreProps<T>): T
 	{
 		let s = this.stores.find(s => s.constructor === type);
 		if (!s)
@@ -28,6 +28,7 @@ export class RootStore
 		{
 			console.warn(`${type.name} is already initialized!`);
 		}
+		return s as T;
 	}
 
 	// public static initMultiple(...initGroups: InitStoreGroup<any>[])
