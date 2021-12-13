@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import App from "./App";
 import { OpenDialog } from "./dialogs/OpenDialog";
+import { Editor } from "./editor/Editor";
 import { MENU_ITEMS } from "./menu-items";
 import { DialogStore } from "./stores/DialogStore";
 import { MenuBarStore } from "./stores/MenuBarStore";
@@ -17,15 +18,15 @@ exec(async () =>
 
 	document.body.appendChild(root);
 
-	const settingsStore = RootStore.init(SettingsStore, {});
-	const menuBarStore = RootStore.init(MenuBarStore, MENU_ITEMS);
-	const openDialogStore = RootStore.init(OpenDialogStore, {});
-	const dialogStore = RootStore.init(DialogStore, {
+	RootStore.init(SettingsStore, {});
+	RootStore.init(MenuBarStore, MENU_ITEMS);
+	RootStore.init(OpenDialogStore, {});
+	RootStore.init(DialogStore, {
 		open: true,
 		component: OpenDialog,
 		title: "Open Map",
 		options: {
-			closable: openDialogStore.hasProjects
+			closable: Editor.get().openMapNames.length > 0
 		},
 		size: {
 			max: {

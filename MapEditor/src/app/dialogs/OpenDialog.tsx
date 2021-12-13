@@ -18,37 +18,54 @@ const ProjectList = useStore(OpenDialogStore, ({ store }) =>
 {
 	return (
 		<View>
-			{store.projects.map((p, i) => (
-				<View key={i} className={utils.react.getClassFromProps("item", { selected: store.selectedProject === p })}>
-					<View>{p.name}</View>
-					<View>{p.path}</View>
-				</View>
-			))}
-		</View>
-	);
-});
-
-const OpenProjectPanel = useStore(OpenDialogStore, ({ store }) =>
-{
-	return (
-		<View>
-			
+			{store.projects.map((p, i) =>
+			{
+				const cn = utils.react.getClassFromProps("item", { selected: store.selectedProject === p });
+				return (
+					<View key={i} className={cn} onClick={() => store.selectProject(i)}>
+						<View className="name">{p.name}</View>
+						<View className="path">{p.path}</View>
+					</View>
+				);
+			})}
 		</View>
 	);
 });
 
 const OpenMapPanel = useStore(OpenDialogStore, ({ store }) =>
 {
-	if(!store.selectedProject)
+	if (!store.selectedProject)
 		return (
 			<h2 className="text">
 				Select a project to choose a map!
 			</h2>
 		);
 
+	if (store.selectedProject.maps.length === 0)
+		return (
+			<View>
+				<h2 className="text">
+					Project {store.selectedProject.name} has no maps!
+				</h2>
+				<Button onClick={() => store.showCreateMapPanel(true)}>
+					Create Map
+				</Button>
+			</View>
+		);
+
 	return (
 		<View>
-			
+			{ }
+		</View>
+	);
+});
+
+const NewMapPanel = useStore(OpenDialogStore, () => 
+{
+
+	return (
+		<View>
+			NewMapPanel
 		</View>
 	);
 });
@@ -60,8 +77,13 @@ export const OpenDialog = useStores({ dialog: DialogStore, openStore: OpenDialog
 			<FlexItem base={280}>
 				<FlexBox fill position="absolute" theme="secundary" dir="vertical" className="side-bar">
 					<FlexItem base={64}>
-						<View className="top-bar">
-							<h3>Projects</h3>
+						<View className="top-bar" position="absolute" fill>
+							<View position="absolute" center="vertical">
+								<h3>Projects</h3>
+							</View>
+							<View className="add-btn" position="absolute" center="vertical" onClick={openStore.openProject}>
+								<View />
+							</View>
 						</View>
 					</FlexItem>
 					<FlexItem>
@@ -71,8 +93,11 @@ export const OpenDialog = useStores({ dialog: DialogStore, openStore: OpenDialog
 					</FlexItem>
 				</FlexBox>
 			</FlexItem>
-			<FlexItem className="map-list">
-				<OpenMapPanel />
+			<FlexItem className="body">
+				<View className="slider" position="absolute" style={{ width: "200%", left: openStore.isCreatePanelShown ? "-100%" : "0%" }}>
+					<OpenMapPanel />
+					<NewMapPanel />
+				</View>
 			</FlexItem>
 		</FlexBox>
 	);

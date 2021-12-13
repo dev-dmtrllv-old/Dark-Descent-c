@@ -13,7 +13,6 @@ export const dialogComponent = <Props extends {}>(component: React.FC<Props & { 
 	return (props: Props) => <Component {...props} dialog={RootStore.get(DialogStore)}/>
 };
 
-
 const DialogCloseBtn: React.FC<DialogCloseBtnProps> = ({ onClick }) => (
 	<View className="close-btn" position="absolute" onClick={() => onClick()}>
 		<View position="absolute" center className="cross" />

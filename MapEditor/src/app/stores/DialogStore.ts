@@ -109,6 +109,9 @@ export class DialogStore extends InitializableStore<InitDialogProps>
 		if(closable != this._options.closable)
 			this.updateOptions({ closable });
 	}
+
+	@action
+	public setTitle = (title: string) => this._title = title;
 }
 
 type InitDialogProps = {
