@@ -5,6 +5,7 @@ import path from "path";
 import fs from "fs";
 import { action, computed, makeAutoObservable, observable } from "mobx";
 import { utils } from "utils";
+import { Serializable, SerializedType } from "app/Serializable";
 
 export type UnityProjectSettingsProps = {
 	spriteDir: string;
@@ -15,7 +16,7 @@ export type UnityProjectSettingsProps = {
 export class UnityProjectSettings
 {
 	private static readonly FILE_NAME = "map-editor-settings.json";
-	
+
 	private static readonly defaultSettings: UnityProjectSettingsProps = {
 		prefabDir: "Prefabs",
 		spriteDir: "Sprites",
@@ -29,8 +30,8 @@ export class UnityProjectSettings
 
 	public constructor(projectPath: string)
 	{
-		this.path = path.resolve(projectPath, UnityProjectSettings.FILE_NAME); 
-		if(!fs.existsSync(this.path))
+		this.path = path.resolve(projectPath, UnityProjectSettings.FILE_NAME);
+		if (!fs.existsSync(this.path))
 		{
 			this._settings = UnityProjectSettings.defaultSettings;
 			this.updateAndSave(this._settings);
@@ -38,7 +39,7 @@ export class UnityProjectSettings
 		else
 		{
 			this._settings = JSON.parse(fs.readFileSync(this.path, "utf-8"));
-			if(!utils.arrayEquals(Object.keys(this._settings), Object.keys(UnityProjectSettings.defaultSettings)))
+			if (!utils.arrayEquals(Object.keys(this._settings), Object.keys(UnityProjectSettings.defaultSettings)))
 			{
 				this._settings = { ...UnityProjectSettings.defaultSettings, ...this._settings };
 				this.updateAndSave(this._settings);
@@ -48,7 +49,7 @@ export class UnityProjectSettings
 
 	public update(settings: Partial<UnityProjectSettingsProps>)
 	{
-		if(!utils.objectEquals(this._settings, settings))
+		if (!utils.objectEquals(this._settings, settings))
 			this.updateAndSave(settings);
 	}
 
@@ -58,16 +59,20 @@ export class UnityProjectSettings
 		this._settings = { ...this._settings, ...settings };
 		fs.writeFileSync(this.path, JSON.stringify(this._settings), "utf-8");
 	}
+
+	public get<K extends keyof UnityProjectSettingsProps>(key: K): UnityProjectSettingsProps[K]
+	{
+		return this._settings[key];
+	}
 }
 
-export class UnityProject
+export class UnityProject implements Serializable<SerializedUnityProjectData>
 {
 	public readonly name: string;
 	public readonly path: string;
-	public readonly exportPath: string;
 
 	private _isLoaded: boolean = false;
-	
+
 	public readonly settings: UnityProjectSettings;
 
 	public isLoaded() { return this._isLoaded; }
@@ -82,26 +87,45 @@ export class UnityProject
 	{
 		this.name = name;
 		this.path = projectPath;
-		this.exportPath = path.resolve(this.path, "Assets", RootStore.get(SettingsStore).exportFolder);
-		this.settings = new UnityProjectSettings(this.path);
-		console.log(this.settings);
-		
-		if(!fs.existsSync(this.exportPath))
-			fs.mkdirSync(this.exportPath, { recursive: true });
+		this.settings = new UnityProjectSettings(this.path);		
+
+		const exportDir = this.settings.get("exportDir");
+
+		if (!fs.existsSync(exportDir))
+			fs.mkdirSync(exportDir, { recursive: true });
 		else
-			fs.readdirSync(this.exportPath).map(file => 
+			fs.readdirSync(exportDir).map(file => 
 			{
 				console.log(file);
 			});
+		
 		makeAutoObservable(this);
+	}
+
+	public parse({ name, path }: SerializedType<SerializedUnityProjectData>)
+	{
+		return { name, path };
+	}
+
+	public serialize(): SerializedType<SerializedUnityProjectData>
+	{
+		return {
+			name: this.name,
+			path: this.path
+		};
 	}
 
 	@action
 	public readonly addMap = (name: string) =>
 	{
-		if(this._maps.find(m => m.name === name))
+		if (this._maps.find(m => m.name === name))
 			throw new Error(`There is already a map with the name "${name}"!`);
-	
+
 		this._maps = [...this._maps, new Map(this, name)];
 	}
 }
+
+type SerializedUnityProjectData = {
+	name: string;
+	path: string;
+};

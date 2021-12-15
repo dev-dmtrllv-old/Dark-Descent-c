@@ -1,3 +1,4 @@
+import { Serializable, SerializedType } from "app/Serializable";
 import { action, computed, makeAutoObservable, observable } from "mobx";
 import { Editor } from "./Editor";
 import { MapRenderer } from "./MapRenderer";
@@ -5,7 +6,7 @@ import { Platform } from "./Platform";
 import { UnityProject } from "./UnityProject";
 import { Vector2 } from "./Vector2";
 
-export class Map
+export class Map implements Serializable<SerializedMapData>
 {
 	public readonly name: string;
 	public readonly renderer: MapRenderer;
@@ -35,6 +36,18 @@ export class Map
 		makeAutoObservable(this);
 	}
 
+	parse(data: SerializedType<SerializedMapData>)
+	{
+		return {
+			name: data.name
+		};
+	}
+
+	serialize(): SerializedType<SerializedMapData>
+	{
+		return { name: this.name };
+	}
+
 	@action
 	public readonly open = () => 
 	{
@@ -45,3 +58,7 @@ export class Map
 		}
 	}
 }
+
+type SerializedMapData = {
+	name: string;
+};

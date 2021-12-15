@@ -1,14 +1,10 @@
 import { UnityProject } from "app/editor/UnityProject";
-import { Storage } from "app/Storage";
 import { ipcRenderer } from "electron";
 import { action, computed, observable } from "mobx";
-import { InitializableStore } from "./Store";
 import fs from "fs";
 import path from "path";
-
-const storage = new Storage("OpenDialog", {
-	"recentProjects": "array",
-});
+import { SerializableStore } from "./SerializableStore";
+import { SerializedType } from "app/Serializable";
 
 const defaultInputValues: Required<CreateMapInputs> = {
 	name: "",
@@ -16,13 +12,20 @@ const defaultInputValues: Required<CreateMapInputs> = {
 	width: "480"
 };
 
-export class OpenDialogStore extends InitializableStore
+export class OpenDialogStore extends SerializableStore<SerializableData>
 {
+	protected get defaultData(): SerializableData
+	{
+		return {
+			recentProjects: []
+		};
+	}
+	
 	@observable
 	private _createProps: CreateMapInputs = defaultInputValues;
 
-	@observable
-	private _projects: UnityProject[] = [];
+	// @observable
+	// private _projects: UnityProject[] = [];
 
 	@observable
 	private _selected: number = 0;
@@ -30,10 +33,10 @@ export class OpenDialogStore extends InitializableStore
 	@observable
 	private _showCreatePanel: boolean = false;
 
-	protected init = () => 
-	{
-		this._projects = storage.get("recentProjects", []).map((data) => new UnityProject(data.name, data.path));
-	}
+	// protected init = () => 
+	// {
+	// 	this._projects = storage.get("recentProjects", []).map((data) => new UnityProject(data.name, data.path));
+	// }
 
 	@observable
 	private _createMapErrors: string[] = [];
@@ -45,7 +48,7 @@ export class OpenDialogStore extends InitializableStore
 	public get createInputValues() { return this._createProps; }
 
 	@computed
-	public get projects() { return this._projects; }
+	public get projects() { return this.get("recentProjects"); }
 
 	@computed
 	public get hasProjects() { return this.projects.length !== 0; }
@@ -62,7 +65,7 @@ export class OpenDialogStore extends InitializableStore
 		if (!info.canceled)
 		{
 			const dir = info.filePaths[0];
-			if (!this._projects.find(p => p.path === dir))
+			if (!this.get("recentProjects").find(p => p.path === dir))
 			{
 
 				fs.readdir(dir, (err, files: string[]) => 
@@ -80,22 +83,30 @@ export class OpenDialogStore extends InitializableStore
 		}
 	}
 
+	public serialize(): SerializedType<SerializableData>
+	{
+		return {
+			recentProjects: this.get("recentProjects").map(({ name, path }) => ({ name, path }))
+		}
+	}
+
+	public parse(data: SerializedType<SerializableData>): SerializableData
+	{
+		return {
+			recentProjects: data.recentProjects.map(r => new UnityProject(r.name, r.path))
+		};
+	}
+
 	@action
 	private addProject(dir: string)
 	{
-		this._projects = [...this.projects, new UnityProject(path.basename(dir), dir)];
-
-		storage.update("recentProjects", (data) => 
+		this.update("recentProjects", (data) => 
 		{
 			if (!data)
 				data = [];
-			return this._projects;
+			data.push(new UnityProject(path.basename(dir), dir));
+			return data;
 		});
-
-		// const store = RootStore.get(DialogStore);
-
-		// store.setClosable(true);
-
 	}
 
 	@action
@@ -165,4 +176,8 @@ type CreateMapInputs = {
 	name?: string;
 	width?: string;
 	height?: string;
+};
+
+type SerializableData = {
+	recentProjects: UnityProject[];
 };
