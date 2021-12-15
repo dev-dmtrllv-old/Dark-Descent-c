@@ -5,15 +5,22 @@ import { action, computed, observable } from "mobx";
 import { InitializableStore } from "./Store";
 import fs from "fs";
 import path from "path";
-import { RootStore } from "./RootStore";
-import { DialogStore } from "./DialogStore";
 
 const storage = new Storage("OpenDialog", {
 	"recentProjects": "array",
 });
 
+const defaultInputValues: Required<CreateMapInputs> = {
+	name: "",
+	height: "640",
+	width: "480"
+};
+
 export class OpenDialogStore extends InitializableStore
 {
+	@observable
+	private _createProps: CreateMapInputs = defaultInputValues;
+
 	@observable
 	private _projects: UnityProject[] = [];
 
@@ -27,6 +34,15 @@ export class OpenDialogStore extends InitializableStore
 	{
 		this._projects = storage.get("recentProjects", []).map((data) => new UnityProject(data.name, data.path));
 	}
+
+	@observable
+	private _createMapErrors: string[] = [];
+
+	@computed
+	public get createMapErrors() { return [...this._createMapErrors]; }
+
+	@computed
+	public get createInputValues() { return this._createProps; }
 
 	@computed
 	public get projects() { return this._projects; }
@@ -96,12 +112,57 @@ export class OpenDialogStore extends InitializableStore
 	@action
 	public readonly showCreateMapPanel = (val: boolean) => 
 	{
-		this._showCreatePanel = val;
-		setTimeout(() =>  { RootStore.get(DialogStore).setTitle(val ? "Create Map" : "Open Map"); }, 350);
+		this._showCreatePanel = val
+		
+		if(!val)
+			this.resetInputValues();
 	};
+
+	@action
+	public createMap = (values: CreateMapInputs) => 
+	{
+		let errors = [];
+
+		if (!values.name)
+			errors.push(`No name is provided for the map!`);
+		else if (this.selectedProject?.maps.find(m => m.name === values.name))
+			errors.push(`There already is an map with the name ${values.name}`);
+
+		if (!values.width)
+			errors.push(`Invalid width!`);
+		if (!values.height)
+			errors.push(`Invalid height!`);
+
+
+		if (errors.length === 0)
+		{
+			this._createMapErrors = [];
+			console.log(values);
+			this.resetInputValues();
+		}
+		else
+		{
+			this._createMapErrors = errors;
+		}
+	}
+
+	@action
+	public updateInputValues = (key: string, value: string) =>
+	{
+		this._createProps = { ...this._createProps, [key]: value };
+	}
+
+	@action
+	public resetInputValues = () => { this._createProps = defaultInputValues; }
 }
 
 type DirInfo = {
 	canceled: boolean;
 	filePaths: string[];
+};
+
+type CreateMapInputs = {
+	name?: string;
+	width?: string;
+	height?: string;
 };

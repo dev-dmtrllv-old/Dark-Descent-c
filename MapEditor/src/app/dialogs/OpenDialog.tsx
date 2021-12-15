@@ -1,7 +1,9 @@
 import { DialogStore } from "app/stores/DialogStore";
 import { OpenDialogStore } from "app/stores/OpenDialogStore";
 import { useStore, useStores } from "app/stores/Store";
-import { Button, FlexBox, FlexItem, View } from "app/views";
+import { Button, FlexBox, FlexItem, Input, View } from "app/views";
+import { Form } from "app/views/Form";
+import { NumberInput } from "app/views/NumberInput";
 import React from "react";
 import { utils } from "utils";
 
@@ -17,7 +19,7 @@ const NoProjectFound = useStore(OpenDialogStore, ({ store }) => (
 const ProjectList = useStore(OpenDialogStore, ({ store }) =>
 {
 	return (
-		<View>
+		<View className="projects-list">
 			{store.projects.map((p, i) =>
 			{
 				const cn = utils.react.getClassFromProps("item", { selected: store.selectedProject === p });
@@ -43,7 +45,7 @@ const OpenMapPanel = useStore(OpenDialogStore, ({ store }) =>
 
 	if (store.selectedProject.maps.length === 0)
 		return (
-			<View>
+			<View className="map-panel">
 				<h2 className="text">
 					Project {store.selectedProject.name} has no maps!
 				</h2>
@@ -54,19 +56,49 @@ const OpenMapPanel = useStore(OpenDialogStore, ({ store }) =>
 		);
 
 	return (
-		<View>
+		<View className="map-panel">
 			{ }
 		</View>
 	);
 });
 
-const NewMapPanel = useStore(OpenDialogStore, () => 
+const NewMapPanel = useStore(OpenDialogStore, ({ store }) => 
 {
-
 	return (
-		<View>
-			NewMapPanel
-		</View>
+		<FlexBox fill position="absolute" theme="primary" dir="vertical" className="new-map-panel">
+			<FlexItem base={64}>
+				<View className="top-bar" position="absolute" fill>
+					<Button onClick={() => store.showCreateMapPanel(false)}>
+						Back
+					</Button>
+					<View className="title">
+						Create Map
+					</View>
+				</View>
+			</FlexItem>
+			<FlexItem>
+				<Form onSubmit={store.createMap} values={store.createInputValues} onChange={store.updateInputValues}>
+					<Input name="name" placeholder="Map Name" />
+					<View className="size-group" center="horizontal">
+						<NumberInput name="width" min={0} />
+						<View className="cross" />
+						<NumberInput name="height" min={0} />
+					</View>
+					<View center="horizontal">
+						<Button name="submit" type="submit">
+							Create
+						</Button>
+					</View>
+					<View className="create-map-errors">
+						{store.createMapErrors.map((error, i) => (
+							<View key={i}>
+								{error}
+							</View>
+						))}
+					</View>
+				</Form>
+			</FlexItem>
+		</FlexBox >
 	);
 });
 

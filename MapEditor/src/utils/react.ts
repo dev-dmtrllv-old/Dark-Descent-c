@@ -14,7 +14,7 @@ export const getClassFromProps = (cn: string, { className, ...props }: { [key: s
 	return className ? `${className} ${cn}` : cn;
 }
 
-export const stopMouseEvents = (e: React.MouseEvent) =>
+export const stopEvents = (e: React.MouseEvent | React.FormEvent) =>
 {
 	e.preventDefault();
 	e.stopPropagation();

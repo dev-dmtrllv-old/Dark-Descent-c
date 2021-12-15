@@ -23,7 +23,7 @@ export const Dialog = RootStore.use(DialogStore, ({ store }) =>
 {
 	return (
 		<View position="absolute" theme="custom" fill className={utils.react.getClassFromProps("dialog-wrapper", { open: store.isOpen })} onClick={() => store.options.closable && store.close()}>
-			<View position="absolute" theme="primary" center className="dialog" onClick={utils.react.stopMouseEvents} style={store.style}>
+			<View position="absolute" theme="primary" center className="dialog" onClick={utils.react.stopEvents} style={store.style}>
 				<FlexBox dir="vertical" fill>
 					<FlexItem className="top-bar" base={64}>
 						<h1 className="title">

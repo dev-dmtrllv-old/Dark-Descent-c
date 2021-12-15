@@ -22,6 +22,8 @@
 		top: 7px;
 		background-color: transparent;
 		transition: 150ms;
+		user-select: none;
+		pointer-events: none;
 	}
 
 	&.focus .placeholder, &:not(.empty) .placeholder {

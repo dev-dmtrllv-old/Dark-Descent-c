@@ -62,15 +62,18 @@
 					bottom: 0px;
 					background-color: $tertiary-bg;
 				}
+
 				&.selected {
 					background-color: $tertiary-bg;
 				}
+
 				&:hover {
 					background-color: #434343;
 				}
 			}
 		}
 	}
+
 	.body {
 		overflow: hidden;
 		.slider {
@@ -86,6 +89,78 @@
 
 		.text {
 			padding: 15px;
+		}
+
+		.map-panel {
+			padding: 15px;
+			.text {
+				padding: 15px 8px !important;
+			}
+		}
+
+		.new-map-panel {
+			.top-bar {
+				.title {
+					position: unset;
+					display: inline-block;
+					margin-left: 15px;
+					margin-top: 3px;
+					vertical-align: top;
+				}
+			}
+			form {
+				box-sizing: border-box;
+				position: relative;
+				padding: 16px 35px;
+
+				.input-wrapper,
+				.number-input {
+					margin: 15px 0px;
+				}
+
+				.input-wrapper,
+				.input-wrapper .input {
+					width: calc(100% - 15px);
+				}
+
+				.input-wrapper {
+					display: block;
+				}
+				.size-group {
+					margin: 0px auto;
+					width: unset;
+					display: inline-block;
+					.number-input {
+						display: inline-block;
+					}
+
+					.cross {
+						display: inline-block;
+						width: 46px;
+						height: 46px;
+						&::after,
+						&::before {
+							content: "";
+							position: absolute;
+							left: 50%;
+							bottom: 5px;
+							transform: translateX(-50%) rotate(-45deg);
+							background-color: $tertiary-bg;
+							height: 2px;
+							width: 50%;
+							border-radius: 6px;
+						}
+
+						&::after {
+							transform: translateX(-50%) rotate(45deg);
+						}
+					}
+
+					.button {
+						display: block;
+					}
+				}
+			}
 		}
 	}
 }
