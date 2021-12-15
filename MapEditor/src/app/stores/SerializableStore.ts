@@ -15,6 +15,8 @@ export abstract class SerializableStore<SerializableData extends StorageData> ex
 
 	protected abstract get defaultData(): SerializableData;
 
+	protected onInit = () => {  }
+
 	protected init = (props: SerializableStoreProps) =>
 	{
 		const dataString = localStorage.getItem(this.namespace);
@@ -30,16 +32,17 @@ export abstract class SerializableStore<SerializableData extends StorageData> ex
 			localStorage.setItem(this.namespace, JSON.stringify(this.defaultData));
 			this._serializableData = { ...this.defaultData };
 		}
+
+		this.onInit();
 	}
 
 	public abstract parse(serializedString: SerializedType<SerializableData>): SerializableData;
 	public abstract serialize(): SerializedType<SerializableData>;
 
 
-	@computed
 	public readonly get = <K extends keyof SerializableData>(key: K): SerializableData[K] => this._serializableData[key];
 
-	@computed
+	@action
 	public readonly set = <K extends keyof SerializableData>(key: K, data: SerializableData[K]): void =>
 	{
 		this._serializableData = { ...this._serializableData, [key]: data };
@@ -47,7 +50,7 @@ export abstract class SerializableStore<SerializableData extends StorageData> ex
 			localStorage.setItem(this.namespace, JSON.stringify(this.serialize()));
 	}
 
-	@computed
+	@action
 	public readonly update = <K extends keyof SerializableData>(key: K, updater: (oldValue: SerializableData[K]) => SerializableData[K]): SerializableData[K] => 
 	{
 		const newVal = updater(this.get(key));

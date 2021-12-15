@@ -19,3 +19,5 @@ export const stopEvents = (e: React.MouseEvent | React.FormEvent) =>
 	e.preventDefault();
 	e.stopPropagation();
 }
+
+export const useMounter = (onMount: Function, onUnMount: Function) => React.useEffect(() => { onMount(); return () => onUnMount(); }, []);

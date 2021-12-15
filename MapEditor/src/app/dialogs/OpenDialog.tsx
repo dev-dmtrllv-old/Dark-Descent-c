@@ -38,27 +38,53 @@ const OpenMapPanel = useStore(OpenDialogStore, ({ store }) =>
 {
 	if (!store.selectedProject)
 		return (
-			<h2 className="text">
-				Select a project to choose a map!
-			</h2>
-		);
-
-	if (store.selectedProject.maps.length === 0)
-		return (
-			<View className="map-panel">
+			<View>
 				<h2 className="text">
-					Project {store.selectedProject.name} has no maps!
+					Select a project to choose a map!
 				</h2>
-				<Button onClick={() => store.showCreateMapPanel(true)}>
-					Create Map
-				</Button>
 			</View>
 		);
 
 	return (
-		<View className="map-panel">
-			{ }
-		</View>
+		<FlexBox fill position="absolute" theme="primary" dir="vertical" className="new-map-panel">
+			<FlexItem base={64}>
+				<View className="top-bar" position="absolute" fill>
+					<View className="title" position="absolute" center>
+						Maps
+					</View>
+					<View className="add-btn" position="absolute" center="vertical" onClick={() => store.showCreateMapPanel(true)}>
+						<View />
+					</View>
+				</View>
+			</FlexItem>
+			<FlexItem>
+				<View position="absolute" fill className="map-list">
+					{store.selectedProject.maps.map((m, i) => 
+					{
+						const handleClick = (e: React.MouseEvent) =>
+						{
+							utils.react.stopEvents(e);
+							store.selectMapDropdown(i);
+						}
+
+						const selected = store.selectedDropdown === i;
+
+						return (
+							<View key={i} className={utils.react.getClassFromProps("item", { selected })} onClick={() => store.openMap(m)}>
+								<View className="name">{m.name}</View>
+								<View className="size">{m.size.x} x {m.size.y}</View>
+								<View className="edit-btn" position="absolute" center="vertical" onClick={handleClick}><View position="absolute" center /></View>
+								<View className="edit-dropdown" position="absolute" onClick={utils.react.stopEvents}>
+									<View onClick={(e) => { utils.react.stopEvents(e); store.editMap(m); }}>Edit</View>
+									<View onClick={(e) => { utils.react.stopEvents(e); store.duplicateMap(m); }}>Duplicate</View>
+									<View onClick={(e) => { utils.react.stopEvents(e); store.removeMap(m); }}>Delete</View>
+								</View>
+							</View>
+						);
+					})}
+				</View>
+			</FlexItem>
+		</FlexBox>
 	);
 });
 
@@ -68,37 +94,40 @@ const NewMapPanel = useStore(OpenDialogStore, ({ store }) =>
 		<FlexBox fill position="absolute" theme="primary" dir="vertical" className="new-map-panel">
 			<FlexItem base={64}>
 				<View className="top-bar" position="absolute" fill>
-					<Button onClick={() => store.showCreateMapPanel(false)}>
+					{store.hasSelectedProjectMaps && <Button onClick={() => store.showCreateMapPanel(false)}>
 						Back
-					</Button>
-					<View className="title">
-						Create Map
+					</Button>}
+					<View className="title" position="absolute" center>
+						{store.isEditing ? "Edit Map" : "Create Map"}
 					</View>
 				</View>
 			</FlexItem>
 			<FlexItem>
-				<Form onSubmit={store.createMap} values={store.createInputValues} onChange={store.updateInputValues}>
-					<Input name="name" placeholder="Map Name" />
-					<View className="size-group" center="horizontal">
-						<NumberInput name="width" min={0} />
-						<View className="cross" />
-						<NumberInput name="height" min={0} />
-					</View>
-					<View center="horizontal">
-						<Button name="submit" type="submit">
-							Create
-						</Button>
-					</View>
-					<View className="create-map-errors">
-						{store.createMapErrors.map((error, i) => (
-							<View key={i}>
-								{error}
-							</View>
-						))}
-					</View>
-				</Form>
+				<View className="form-wrapper">
+					<Form onSubmit={store.createMap} values={store.createInputValues} onChange={store.updateInputValues}>
+						<Input name="name" placeholder="Map Name" />
+						<View className="size-group" center="horizontal">
+							<NumberInput name="width" min={0} />
+							<View className="cross" />
+							<NumberInput name="height" min={0} />
+						</View>
+						<View center="horizontal">
+							<Button name="submit" type="submit">
+								{store.isEditing ? "Edit" : "Create"}
+							</Button>
+						</View>
+						<View className="create-map-errors">
+							{store.createMapErrors.map((error, i) => (
+								<View className="error" key={i}>
+									{error}
+									<View position="absolute" className="btn-remove" onClick={() => store.removeError(i)} />
+								</View>
+							))}
+						</View>
+					</Form>
+				</View>
 			</FlexItem>
-		</FlexBox >
+		</FlexBox>
 	);
 });
 
@@ -126,9 +155,8 @@ export const OpenDialog = useStores({ dialog: DialogStore, openStore: OpenDialog
 				</FlexBox>
 			</FlexItem>
 			<FlexItem className="body">
-				<View className="slider" position="absolute" style={{ width: "200%", left: openStore.isCreatePanelShown ? "-100%" : "0%" }}>
-					<OpenMapPanel />
-					<NewMapPanel />
+				<View position="absolute" fill>
+					{openStore.isCreatePanelShown ? <NewMapPanel /> : <OpenMapPanel />}
 				</View>
 			</FlexItem>
 		</FlexBox>

@@ -8,7 +8,7 @@ import { DialogStore } from "./stores/DialogStore";
 import { MenuBarStore } from "./stores/MenuBarStore";
 import { OpenDialogStore } from "./stores/OpenDialogStore";
 import { RootStore } from "./stores/RootStore";
-// import { SettingsStore } from "./stores/SettingsStore";
+
 const exec = (callback: Function) => callback();
 
 exec(async () => 
@@ -18,7 +18,6 @@ exec(async () =>
 
 	document.body.appendChild(root);
 
-	// RootStore.init(SettingsStore, {});
 	RootStore.init(MenuBarStore, MENU_ITEMS);
 	RootStore.init(OpenDialogStore, {});
 	RootStore.init(DialogStore, {

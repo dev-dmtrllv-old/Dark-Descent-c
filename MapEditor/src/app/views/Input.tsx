@@ -4,22 +4,30 @@ import { View } from "./View";
 import { FormContext } from "./Form";
 
 import "./styles/input.scss";
-import { Button } from ".";
 
 export const Input: React.FC<InputProps> = ({ children, className, onChange, type = "text", name, placeholder, value, ...props }) => 
 {
-	const ctx = React.useContext(FormContext);
-
-	const [hasFocus, setFocus] = React.useState(false);
-	const [isEmpty, setisEmpty] = React.useState(!value || value.length === 0);
-
-	if(!name && !placeholder)
+	if (!name && !placeholder)
 		throw new Error("Provade at least a name or placeholder!");
 
 	if (!name && placeholder)
 		name = placeholder;
 	else if (!placeholder && name)
 		placeholder = name;
+
+	const ctx = React.useContext(FormContext);
+
+	const [hasFocus, setFocus] = React.useState(false);
+	const [isEmpty, setisEmpty] = React.useState((!value || value.length === 0) && (ctx?.getValue(name!).length === 0));
+
+	React.useEffect(() => 
+	{
+		const _isEmpty = (!value || value.length === 0) && (ctx?.getValue(name!).length === 0);
+		if (isEmpty !== _isEmpty)
+			setisEmpty(_isEmpty);
+	}, [value]);
+
+
 
 	const onFocus = () => setFocus(true);
 	const onBlur = () => setFocus(false);

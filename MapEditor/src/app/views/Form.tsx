@@ -24,7 +24,7 @@ export const Form: React.FC<FormProps> = ({ onChange, onSubmit, children, values
 	}, [values]);
 
 	return (
-		<form onSubmit={utils.react.stopEvents}>
+		<form onSubmit={utils.react.stopEvents} action="#">
 			<FormContext.Provider value={ctx}>
 				{children}
 			</FormContext.Provider>

@@ -5,11 +5,15 @@ import fs from "fs";
 import path from "path";
 import { SerializableStore } from "./SerializableStore";
 import { SerializedType } from "app/Serializable";
+import { RootStore } from "./RootStore";
+import { DialogStore } from "./DialogStore";
+import { Editor } from "app/editor/Editor";
+import { Map } from "app/editor/Map";
 
 const defaultInputValues: Required<CreateMapInputs> = {
 	name: "",
-	height: "640",
-	width: "480"
+	width: "640",
+	height: "480",
 };
 
 export class OpenDialogStore extends SerializableStore<SerializableData>
@@ -20,7 +24,10 @@ export class OpenDialogStore extends SerializableStore<SerializableData>
 			recentProjects: []
 		};
 	}
-	
+
+	@observable
+	private _editMapTarget: Map | null = null;
+
 	@observable
 	private _createProps: CreateMapInputs = defaultInputValues;
 
@@ -28,13 +35,19 @@ export class OpenDialogStore extends SerializableStore<SerializableData>
 	private _selected: number = 0;
 
 	@observable
-	private _showCreatePanel: boolean = false;
+	private _selectedDropdown: number = -1;
+
+	@observable
+	private _isCreatePanelShown: boolean = false;
 
 	@observable
 	private _createMapErrors: string[] = [];
 
 	@computed
 	public get createMapErrors() { return [...this._createMapErrors]; }
+
+	@computed
+	public get selectedDropdown() { return this._selectedDropdown; }
 
 	@computed
 	public get createInputValues() { return this._createProps; }
@@ -46,10 +59,42 @@ export class OpenDialogStore extends SerializableStore<SerializableData>
 	public get hasProjects() { return this.projects.length !== 0; }
 
 	@computed
-	public get isCreatePanelShown() { return this._showCreatePanel; }
+	public get hasSelectedProjectMaps()
+	{
+		if (!this.selectedProject)
+			return false;
+		return this.selectedProject.maps.length !== 0;
+	}
+
+	@computed
+	public get isCreatePanelShown() { return this._isCreatePanelShown || !this.hasSelectedProjectMaps || (this._editMapTarget !== null); }
 
 	@computed
 	public get selectedProject(): UnityProject | null { return this.projects.length === 0 ? null : this.projects[this._selected] };
+
+	@computed
+	public get sliderLeftStyle(): string
+	{
+		return (this._isCreatePanelShown || !this.hasSelectedProjectMaps) ? "-100%" : "-0%";
+	}
+
+	@computed
+	public get isEditing() { return this._editMapTarget !== null; }
+
+	protected onInit = () => 
+	{
+		window.addEventListener("click", () => this.onClick());
+	}
+
+	@action
+	private onClick = () =>
+	{
+		if (this.selectedDropdown > -1)
+		{
+			this._selectedDropdown = -1;
+		}
+
+	}
 
 	public readonly openProject = async () =>
 	{
@@ -90,6 +135,9 @@ export class OpenDialogStore extends SerializableStore<SerializableData>
 	}
 
 	@action
+	public selectMapDropdown = (index: number) => this._selectedDropdown = index;
+
+	@action
 	private addProject(dir: string)
 	{
 		this.update("recentProjects", (data) => 
@@ -107,18 +155,27 @@ export class OpenDialogStore extends SerializableStore<SerializableData>
 		if (id !== this._selected)
 		{
 			this._selected = id;
-			if (this._showCreatePanel)
+			if (!this.hasSelectedProjectMaps)
+			{
+				this.showCreateMapPanel(true);
+			}
+			else if (this._isCreatePanelShown)
+			{
 				this.showCreateMapPanel(false);
+			}
 		}
 	};
 
 	@action
 	public readonly showCreateMapPanel = (val: boolean) => 
 	{
-		this._showCreatePanel = val
-		
-		if(!val)
+		this._isCreatePanelShown = val;
+
+		if (!val)
+		{
 			this.resetInputValues();
+			this._editMapTarget = null;
+		}
 	};
 
 	@action
@@ -126,22 +183,41 @@ export class OpenDialogStore extends SerializableStore<SerializableData>
 	{
 		let errors = [];
 
+		if (!this.selectedProject)
+			errors.push(`No project is selected!`);
+
 		if (!values.name)
 			errors.push(`No name is provided for the map!`);
-		else if (this.selectedProject?.maps.find(m => m.name === values.name))
+		else if (!this.isEditing && this.selectedProject?.maps.find(m => m.name === values.name))
 			errors.push(`There already is an map with the name ${values.name}`);
 
-		if (!values.width)
+		if (Number(values.width) <= 0)
 			errors.push(`Invalid width!`);
-		if (!values.height)
+		if (Number(values.height) <= 0)
 			errors.push(`Invalid height!`);
 
 
-		if (errors.length === 0)
+		if (errors.length === 0 && this.selectedProject)
 		{
-			this._createMapErrors = [];
-			console.log(values);
-			this.resetInputValues();
+			if (this._editMapTarget)
+			{
+				this._editMapTarget.edit(values as any);
+				this.showCreateMapPanel(false);
+			}
+			else
+			{
+				const { name, width, height } = values as Required<CreateMapInputs>;
+				this._createMapErrors = [];
+				try 
+				{
+					this.openMap(this.selectedProject.addMap(name, +width, +height));
+				}
+				catch (e)
+				{
+					errors.push(e);
+					this._createMapErrors = errors;
+				}
+			}
 		}
 		else
 		{
@@ -157,6 +233,48 @@ export class OpenDialogStore extends SerializableStore<SerializableData>
 
 	@action
 	public resetInputValues = () => { this._createProps = defaultInputValues; }
+
+	@action
+	public removeError = (index: number) => 
+	{
+		const errors = [...this._createMapErrors];
+		errors.splice(index, 1);
+		this._createMapErrors = errors;
+	}
+
+	@action
+	public openMap = (map: Map) =>
+	{
+		this.resetInputValues();
+		Editor.get().addToOpenMaps(map);
+		RootStore.get(DialogStore).close(true);
+	}
+
+	@action
+	public removeMap = (map: Map) =>
+	{
+		map.project.removeMap(map.name);
+		this._selectedDropdown = -1;
+	}
+
+	@action
+	public editMap = (map: Map) =>
+	{
+		this._editMapTarget = map;
+		this._createProps = {
+			name: map.name,
+			width: String(map.size.x),
+			height: String(map.size.y),
+		};
+		this._selectedDropdown = -1;
+	}
+
+	@action
+	public duplicateMap(map: Map)
+	{
+		this.selectedProject?.cloneMap(map);
+		this._selectedDropdown = -1;
+	}
 }
 
 type DirInfo = {

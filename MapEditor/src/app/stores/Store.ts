@@ -1,4 +1,4 @@
-import { observer, PropTypes } from "mobx-react";
+import { observer } from "mobx-react";
 import React from "react";
 import { RootStore } from "./RootStore";
 
