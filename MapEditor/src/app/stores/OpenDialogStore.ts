@@ -24,19 +24,11 @@ export class OpenDialogStore extends SerializableStore<SerializableData>
 	@observable
 	private _createProps: CreateMapInputs = defaultInputValues;
 
-	// @observable
-	// private _projects: UnityProject[] = [];
-
 	@observable
 	private _selected: number = 0;
 
 	@observable
 	private _showCreatePanel: boolean = false;
-
-	// protected init = () => 
-	// {
-	// 	this._projects = storage.get("recentProjects", []).map((data) => new UnityProject(data.name, data.path));
-	// }
 
 	@observable
 	private _createMapErrors: string[] = [];
@@ -57,7 +49,7 @@ export class OpenDialogStore extends SerializableStore<SerializableData>
 	public get isCreatePanelShown() { return this._showCreatePanel; }
 
 	@computed
-	public get selectedProject(): UnityProject | null { return this.projects[this._selected] || null };
+	public get selectedProject(): UnityProject | null { return this.projects.length === 0 ? null : this.projects[this._selected] };
 
 	public readonly openProject = async () =>
 	{
