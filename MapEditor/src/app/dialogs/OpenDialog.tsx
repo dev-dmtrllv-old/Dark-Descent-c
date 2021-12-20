@@ -70,7 +70,7 @@ const OpenMapPanel = useStore(OpenDialogStore, ({ store }) =>
 						const selected = store.selectedDropdown === i;
 
 						return (
-							<View key={i} className={utils.react.getClassFromProps("item", { selected })} onClick={() => store.openMap(m)}>
+							<View key={i} className={utils.react.getClassFromProps("item", { selected })} onClick={(e) => { store.openMap(m); }}>
 								<View className="name">{m.name}</View>
 								<View className="size">{m.size.x} x {m.size.y}</View>
 								<View className="edit-btn" position="absolute" center="vertical" onClick={handleClick}><View position="absolute" center /></View>

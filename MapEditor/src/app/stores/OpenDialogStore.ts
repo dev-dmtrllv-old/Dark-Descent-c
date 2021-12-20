@@ -83,15 +83,18 @@ export class OpenDialogStore extends SerializableStore<SerializableData>
 
 	protected onInit = () => 
 	{
-		window.addEventListener("click", () => this.onClick());
+		window.addEventListener("click", (e) => this.onClick(e));
 	}
 
 	@action
-	private onClick = () =>
+	private onClick = (e: MouseEvent) =>
 	{
 		if (this.selectedDropdown > -1)
 		{
 			this._selectedDropdown = -1;
+			e.preventDefault();
+			e.stopPropagation();
+			e.stopImmediatePropagation();
 		}
 
 	}
@@ -104,7 +107,6 @@ export class OpenDialogStore extends SerializableStore<SerializableData>
 			const dir = info.filePaths[0];
 			if (!this.get("recentProjects").find(p => p.path === dir))
 			{
-
 				fs.readdir(dir, (err, files: string[]) => 
 				{
 					if (!files.includes("UnityEditor.UI.csproj"))
@@ -135,7 +137,13 @@ export class OpenDialogStore extends SerializableStore<SerializableData>
 	}
 
 	@action
-	public selectMapDropdown = (index: number) => this._selectedDropdown = index;
+	public selectMapDropdown = (index: number) => 
+	{
+		if (this._selectedDropdown === index)
+			this._selectedDropdown = -1;
+		else
+			this._selectedDropdown = index
+	};
 
 	@action
 	private addProject(dir: string)
@@ -152,7 +160,7 @@ export class OpenDialogStore extends SerializableStore<SerializableData>
 	@action
 	public readonly selectProject = (id: number) => 
 	{
-		if (id !== this._selected)
+		if ((this._selectedDropdown === -1) && (id !== this._selected))
 		{
 			this._selected = id;
 			if (!this.hasSelectedProjectMaps)
@@ -245,9 +253,12 @@ export class OpenDialogStore extends SerializableStore<SerializableData>
 	@action
 	public openMap = (map: Map) =>
 	{
-		this.resetInputValues();
-		Editor.get().addToOpenMaps(map);
-		RootStore.get(DialogStore).close(true);
+		if(this._selectedDropdown === -1)
+		{
+			this.resetInputValues();
+			Editor.get().addToOpenMaps(map);
+			RootStore.get(DialogStore).close(true);
+		}
 	}
 
 	@action
