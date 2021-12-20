@@ -1,5 +1,7 @@
+import { Editor } from "app/editor/Editor";
 import { DialogStore } from "app/stores/DialogStore";
 import { OpenDialogStore } from "app/stores/OpenDialogStore";
+import { RootStore } from "app/stores/RootStore";
 import { useStore, useStores } from "app/stores/Store";
 import { Button, FlexBox, FlexItem, Input, View } from "app/views";
 import { Form } from "app/views/Form";
@@ -8,6 +10,14 @@ import React from "react";
 import { utils } from "utils";
 
 import "./styles/open-dialog.scss";
+
+export const showOpenDialog = () => RootStore.get(DialogStore).open(OpenDialog,
+	"Open Map", {
+	max: {
+		width: "920px",
+		height: "720px"
+	}
+}, { closable: Editor.get().openMapNames.length > 0 });
 
 const NoProjectFound = useStore(OpenDialogStore, ({ store }) => (
 	<View className="not-found">

@@ -3,12 +3,32 @@ import { observer } from "mobx-react-lite";
 import React from "react";
 import { CanvasRenderer } from "./CanvasRenderer";
 import { Map } from "./Map"
+import { showOpenDialog } from "app/dialogs/OpenDialog";
 
 export class Editor
 {
+	public onSelect = (index: number) => action((e: React.MouseEvent<Element, MouseEvent>) =>
+	{
+		if (this._openMaps[index] && (this._activeMap !== this._openMaps[index]))
+			this._activeMap = this._openMaps[index];
+	})
+
+	public onClose = (index: number) => action((e: React.MouseEvent<Element, MouseEvent>) =>
+	{
+		if (index <= this._openMaps.length - 1)
+		{
+			if(this.closeOpenMap(this._openMaps[index]))
+			{
+				e.preventDefault();
+				e.stopPropagation();
+				showOpenDialog();
+			}
+		}
+	})
+
 	public static withStore<P extends {} = {}>(component: React.FC<P & { editor: Editor }>)
 	{
-		return (props: P) => React.createElement(observer(component), { ...props, editor: Editor._instance }); 
+		return (props: P) => React.createElement(observer(component), { ...props, editor: Editor._instance });
 	}
 
 	private static _instance = new Editor();
@@ -49,8 +69,28 @@ export class Editor
 		}
 	}
 
+	@action
 	public addToOpenMaps(map: Map)
 	{
-		this._openMaps = [map, ...this._openMaps];
+		if (!this._openMaps.find(m => map === m))
+		{
+			this._openMaps = [...this._openMaps, map];
+		}
+
+		this._activeMap = map;
+		this.render();
+	}
+
+	@action
+	public closeOpenMap(map: Map)
+	{
+		const index = this._openMaps.indexOf(map);
+		if (index > -1)
+		{
+			const maps = [...this._openMaps];
+			maps.splice(index, 1);
+			this._openMaps = maps;
+			return true;
+		}
 	}
 }
