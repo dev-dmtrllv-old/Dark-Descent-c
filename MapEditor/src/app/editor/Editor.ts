@@ -5,7 +5,7 @@ import { CanvasRenderer } from "./CanvasRenderer";
 import { Map } from "./Map"
 import { showOpenDialog } from "app/dialogs/OpenDialog";
 import { Vector2 } from "./Vector2";
-import { utils } from "utils";
+import { Texture } from "./Texture";
 
 export class Editor
 {
@@ -46,9 +46,18 @@ export class Editor
 	@observable
 	private _activeMap: Map | null = null;
 
+	@observable
+	private _selectedTextureIndex: number = -1;
+
 	private _mouseDownPos: Vector2 | null = null;
 	private _mapStartOffset: Vector2 = Vector2.zero;
 	private _zoomSensitivity: number = 3;
+
+	@computed
+	public get projectTextures(): Texture[] { return this.activeMap?.project.textures || []; }
+
+	@computed
+	public get selectedTextureIndex() { return this._selectedTextureIndex; }
 
 	public readonly canvasRenderer = new CanvasRenderer();
 
@@ -110,6 +119,7 @@ export class Editor
 			if (maps.length === 0)
 				this._activeMap = null;
 
+			this.selectTexture(-1);
 			this.render();
 			return true;
 		}
@@ -137,7 +147,12 @@ export class Editor
 	
 	public readonly onMouseUp = (e: MouseEvent) => 
 	{
+		if(this.selectedTextureIndex > -1)
+		{
+			console.log(this.projectTextures[this.selectedTextureIndex]);
+		}
 		this._mouseDownPos = null;
+		this.selectTexture(-1);
 	}
 	
 	public readonly onMouseWheel = (e: WheelEvent) => 
@@ -151,5 +166,11 @@ export class Editor
 		const c = this.canvasRenderer.canvas!;
 		const { x, y } = c.getBoundingClientRect();
 		return new Vector2(e.clientX - x, e.clientY - y);
+	}
+
+	@action
+	public readonly selectTexture = (i: number) =>
+	{
+		this._selectedTextureIndex = i;
 	}
 }

@@ -10,6 +10,8 @@ export type UnityProjectSettingsProps = {
 	spriteDir: string;
 	prefabDir: string;
 	exportDir: string;
+	ignoreAssetDirs: string[];
+	pixelRatio: number;
 };
 
 export class UnityProjectSettings
@@ -20,6 +22,10 @@ export class UnityProjectSettings
 		prefabDir: "Prefabs",
 		spriteDir: "Sprites",
 		exportDir: "MapExports",
+		ignoreAssetDirs: [
+			"TextMesh Pro"
+		],
+		pixelRatio: 4
 	};
 
 	private readonly path: string;
@@ -75,9 +81,6 @@ export class UnityProject implements Serializable<SerializedUnityProjectData>
 	private _isLoaded: boolean = false;
 
 	public readonly settings: UnityProjectSettings;
-	
-	@observable
-	public readonly _pixelScale: number = 4;
 
 	public get isLoaded() { return this._isLoaded; }
 
@@ -94,7 +97,7 @@ export class UnityProject implements Serializable<SerializedUnityProjectData>
 	public get maps() { return [...this._maps]; }
 
 	@computed
-	public get pixelScale() { return this._pixelScale; }
+	public get pixelRatio() { return this.settings.get("pixelRatio"); }
 
 	public readonly getAssetsPath = (p: "prefab" | "sprite" | "map-exports") => 
 	{
@@ -146,15 +149,20 @@ export class UnityProject implements Serializable<SerializedUnityProjectData>
 
 	private async checkAssetFiles()
 	{
+		const ignoreDirs = [...this.settings.get("ignoreAssetDirs")];
+		
 		const walk = (basePath: string, paths: string[], onFile: (path: string) => void) =>
 		{
 			paths.forEach((p) => 
 			{
-				const _p = path.resolve(basePath, p);
-				if (fs.statSync(_p).isFile())
-					onFile(_p);
-				else
-					walk(_p, fs.readdirSync(_p, {}) as string[], onFile);
+				if (!ignoreDirs.includes(p))
+				{
+					const _p = path.resolve(basePath, p);
+					if (fs.statSync(_p).isFile())
+						onFile(_p);
+					else
+						walk(_p, fs.readdirSync(_p, {}) as string[], onFile);
+				}
 			});
 		}
 
@@ -174,7 +182,6 @@ export class UnityProject implements Serializable<SerializedUnityProjectData>
 		await Promise.all(textures.map(t => t.load()));
 
 		this._textures = textures;
-		console.log(textures);
 	}
 
 
