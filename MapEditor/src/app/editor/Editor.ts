@@ -62,22 +62,31 @@ export class Editor
 
 	public render()
 	{
-		if (this.activeMap)
+		if (this._activeMap)
 		{
 			this.activeMap?.renderer.render();
-			this.canvasRenderer.render(this.activeMap);
+			this.canvasRenderer.render(this._activeMap);
+		}
+		else
+		{
+			this.canvasRenderer.clear();
 		}
 	}
 
 	@action
-	public addToOpenMaps(map: Map)
+	private setActiveMap = (map: Map) => this._activeMap = map;
+
+	@action
+	public async addToOpenMaps(map: Map)
 	{
 		if (!this._openMaps.find(m => map === m))
 		{
 			this._openMaps = [...this._openMaps, map];
+			if(!map.project.isLoaded)
+				await map.project.load();
 		}
 
-		this._activeMap = map;
+		this.setActiveMap(map);
 		this.render();
 	}
 
@@ -90,6 +99,11 @@ export class Editor
 			const maps = [...this._openMaps];
 			maps.splice(index, 1);
 			this._openMaps = maps;
+			
+			if(maps.length === 0)
+				this._activeMap = null;
+				
+			this.render();
 			return true;
 		}
 	}

@@ -4,6 +4,7 @@ import fs from "fs";
 import { action, computed, makeAutoObservable, observable } from "mobx";
 import { utils } from "utils";
 import { Serializable, SerializedType } from "app/Serializable";
+import { Texture } from "./Texture";
 
 export type UnityProjectSettingsProps = {
 	spriteDir: string;
@@ -26,6 +27,7 @@ export class UnityProjectSettings
 	@observable
 	private _settings: UnityProjectSettingsProps;
 
+
 	public constructor(projectPath: string)
 	{
 		this.path = path.resolve(projectPath, UnityProjectSettings.FILE_NAME);
@@ -43,6 +45,7 @@ export class UnityProjectSettings
 				this.updateAndSave(this._settings);
 			}
 		}
+		makeAutoObservable(this);
 	}
 
 	public update(settings: Partial<UnityProjectSettingsProps>)
@@ -72,14 +75,26 @@ export class UnityProject implements Serializable<SerializedUnityProjectData>
 	private _isLoaded: boolean = false;
 
 	public readonly settings: UnityProjectSettings;
+	
+	@observable
+	public readonly _pixelScale: number = 4;
 
-	public isLoaded() { return this._isLoaded; }
+	public get isLoaded() { return this._isLoaded; }
+
+	@observable
+	private _textures: Texture[] = [];
+
+	@computed
+	public get textures() { return [...this._textures]; }
 
 	@observable
 	private _maps: Map[] = [];
 
 	@computed
 	public get maps() { return [...this._maps]; }
+
+	@computed
+	public get pixelScale() { return this._pixelScale; }
 
 	public readonly getAssetsPath = (p: "prefab" | "sprite" | "map-exports") => 
 	{
@@ -118,6 +133,50 @@ export class UnityProject implements Serializable<SerializedUnityProjectData>
 
 		makeAutoObservable(this);
 	}
+
+	@action
+	public async load()
+	{
+		if (!this.isLoaded)
+		{
+			await this.checkAssetFiles();
+			this._isLoaded = true;
+		}
+	}
+
+	private async checkAssetFiles()
+	{
+		const walk = (basePath: string, paths: string[], onFile: (path: string) => void) =>
+		{
+			paths.forEach((p) => 
+			{
+				const _p = path.resolve(basePath, p);
+				if (fs.statSync(_p).isFile())
+					onFile(_p);
+				else
+					walk(_p, fs.readdirSync(_p, {}) as string[], onFile);
+			});
+		}
+
+		const base = path.resolve(this.path, "Assets");
+		const paths = fs.readdirSync(base, {}) as string[];
+
+		const textures: Texture[] = [];
+
+		walk(base, paths, (file) => 
+		{
+			if (file.endsWith(".png"))
+			{
+				textures.push(Texture.get(file))
+			}
+		});
+
+		await Promise.all(textures.map(t => t.load()));
+
+		this._textures = textures;
+		console.log(textures);
+	}
+
 
 	public parse({ name, path }: SerializedType<SerializedUnityProjectData>)
 	{

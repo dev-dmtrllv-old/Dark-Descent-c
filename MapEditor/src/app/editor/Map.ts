@@ -6,33 +6,28 @@ import { Platform } from "./Platform";
 import { UnityProject } from "./UnityProject";
 import { Vector2 } from "./Vector2";
 import fs from "fs";
+import { Texture } from "./Texture";
+
 export class Map implements Serializable<SerializedMapData>
 {
-	public edit({ name, width, height }: { name: string, width: string, height: string })
-	{
-		this._size.setX(+width);
-		this._size.setY(+height);
-
-		if(name && (name !== this._name))
-		{
-			this._name = name;
-			const p = this.project.renameMapFile(this, name);
-			this._path = p;
-		}
-
-		fs.writeFileSync(this._path, JSON.stringify(this.serialize()), "utf-8");
-	}
-
 	private _name: string;
 	public get name() { return this._name; }
 
 	private _path: string;
 	public get path() { return this._path; }
-	
+
 	public readonly renderer: MapRenderer;
 	public readonly project: UnityProject;
-	public readonly platforms: Platform[] = [];
-	
+
+	@observable
+	private _platforms: Platform[] = [];
+
+	@observable
+	private _backgroundLayers: Texture[] = [];
+
+	@observable
+	private _backgroundLayerOffsetSensitivity: number = 100; // percentage
+
 	@observable
 	private _size: Vector2 = new Vector2(640, 480);
 
@@ -48,6 +43,15 @@ export class Map implements Serializable<SerializedMapData>
 	@computed
 	public get isOpen() { return this._isOpen; }
 
+	@computed
+	public get platforms() { return [...this._platforms]; }
+
+	@computed
+	public get backgroundLayers() { return [...this._backgroundLayers]; }
+
+	@computed
+	public get backgroundLayerSensitivity() { return this._backgroundLayerOffsetSensitivity; }
+
 	public constructor(project: UnityProject, name: string, path: string);
 	public constructor(project: UnityProject, name: string, path: string, width: number, height: number);
 	public constructor(project: UnityProject, name: string, path: string, width?: number, height?: number)
@@ -56,7 +60,7 @@ export class Map implements Serializable<SerializedMapData>
 		this._name = name;
 		this._path = path;
 		this.renderer = new MapRenderer(this);
-		if(width && height)
+		if (width && height)
 			this._size = new Vector2(width, height);
 		makeAutoObservable(this);
 	}
@@ -76,11 +80,31 @@ export class Map implements Serializable<SerializedMapData>
 	@action
 	public readonly open = () => 
 	{
-		if(!this._isOpen)
+		if (!this._isOpen)
 		{
 			this._isOpen = true;
 			Editor.get().addToOpenMaps(this);
 		}
+	}
+
+	public edit({ name, width, height }: { name: string, width: string, height: string })
+	{
+		this._size.setX(+width);
+		this._size.setY(+height);
+
+		if (name && (name !== this._name))
+		{
+			this._name = name;
+			const p = this.project.renameMapFile(this, name);
+			this._path = p;
+		}
+
+		this.sync();
+	}
+
+	public sync()
+	{
+		fs.writeFileSync(this._path, JSON.stringify(this.serialize()), "utf-8");
 	}
 }
 

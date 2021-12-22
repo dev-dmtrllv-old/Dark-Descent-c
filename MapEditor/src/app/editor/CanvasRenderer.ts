@@ -23,6 +23,8 @@ export class CanvasRenderer
 			if (!this.ctx)
 				throw ("Could not get 2D context!");
 
+			this.ctx.translate(0.5, 0.5);
+
 			this.resizeObserver.observe(this.canvas.parentElement);
 
 			this.onResize();
@@ -31,7 +33,6 @@ export class CanvasRenderer
 
 	public onUnmount = () =>
 	{
-		console.log("unmount");
 		this._ctx = null;
 	}
 
@@ -53,6 +54,17 @@ export class CanvasRenderer
 	{
 		this.onResize();
 	});
+
+	public clear()
+	{
+		const ctx = this.ctx;
+		
+		if(this.canvas && ctx)
+		{
+			const { clientWidth, clientHeight } = this.canvas;
+			ctx.clearRect(0, 0, clientWidth, clientHeight);
+		}
+	}
 
 	public render(map: Map)
 	{
