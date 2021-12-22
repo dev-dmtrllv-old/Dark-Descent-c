@@ -4,9 +4,19 @@ import React from "react";
 import { CanvasRenderer } from "./CanvasRenderer";
 import { Map } from "./Map"
 import { showOpenDialog } from "app/dialogs/OpenDialog";
+import { Vector2 } from "./Vector2";
+import { utils } from "utils";
 
 export class Editor
 {
+	public static readonly minZoom = 5;
+	public static readonly maxZoom = 500;
+
+	public static withStore<P extends {} = {}>(component: React.FC<P & { editor: Editor }>)
+	{
+		return (props: P) => React.createElement(observer(component), { ...props, editor: Editor._instance });
+	}
+
 	public onSelect = (index: number) => action((e: React.MouseEvent<Element, MouseEvent>) =>
 	{
 		if (this._openMaps[index] && (this._activeMap !== this._openMaps[index]))
@@ -17,19 +27,14 @@ export class Editor
 	{
 		if (index <= this._openMaps.length - 1)
 		{
-			if(this.closeOpenMap(this._openMaps[index]))
+			if (this.closeOpenMap(this._openMaps[index]))
 			{
 				e.preventDefault();
 				e.stopPropagation();
 				showOpenDialog();
 			}
 		}
-	})
-
-	public static withStore<P extends {} = {}>(component: React.FC<P & { editor: Editor }>)
-	{
-		return (props: P) => React.createElement(observer(component), { ...props, editor: Editor._instance });
-	}
+	});
 
 	private static _instance = new Editor();
 
@@ -41,11 +46,18 @@ export class Editor
 	@observable
 	private _activeMap: Map | null = null;
 
+	private _mouseDownPos: Vector2 | null = null;
+	private _mapStartOffset: Vector2 = Vector2.zero;
+	private _zoomSensitivity: number = 3;
+
 	public readonly canvasRenderer = new CanvasRenderer();
 
 	private constructor()
 	{
 		this._activeMap = this._openMaps[0];
+		window.addEventListener("mousemove", this.onMouseMove);
+		window.addEventListener("mouseup", this.onMouseUp);
+		window.addEventListener("wheel", this.onMouseWheel);
 		makeAutoObservable(this);
 	}
 
@@ -63,14 +75,9 @@ export class Editor
 	public render()
 	{
 		if (this._activeMap)
-		{
-			this.activeMap?.renderer.render();
 			this.canvasRenderer.render(this._activeMap);
-		}
 		else
-		{
 			this.canvasRenderer.clear();
-		}
 	}
 
 	@action
@@ -82,7 +89,7 @@ export class Editor
 		if (!this._openMaps.find(m => map === m))
 		{
 			this._openMaps = [...this._openMaps, map];
-			if(!map.project.isLoaded)
+			if (!map.project.isLoaded)
 				await map.project.load();
 		}
 
@@ -99,12 +106,50 @@ export class Editor
 			const maps = [...this._openMaps];
 			maps.splice(index, 1);
 			this._openMaps = maps;
-			
-			if(maps.length === 0)
+
+			if (maps.length === 0)
 				this._activeMap = null;
-				
+
 			this.render();
 			return true;
 		}
+	}
+
+	public readonly onMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => 
+	{
+		if(this._activeMap)
+		{
+			this._mouseDownPos = this.toCC(e);
+			this._mapStartOffset = this._activeMap.offset;
+		}	
+	}
+
+	public readonly onMouseMove = (e: MouseEvent) => 
+	{
+		if(this._mouseDownPos && this._activeMap)
+		{
+			const map = this._activeMap;
+			const pos = this.toCC(e);
+			map.offset = Vector2.add(this._mapStartOffset, Vector2.sub(this._mouseDownPos, pos));
+			console.log(map.offset.serialize());
+		}
+	}
+	
+	public readonly onMouseUp = (e: MouseEvent) => 
+	{
+		this._mouseDownPos = null;
+	}
+	
+	public readonly onMouseWheel = (e: WheelEvent) => 
+	{
+		const pos = this.toCC(e);
+	}
+
+	// converts to canvas coordinates
+	private toCC(e: { clientX: number, clientY: number })
+	{
+		const c = this.canvasRenderer.canvas!;
+		const { x, y } = c.getBoundingClientRect();
+		return new Vector2(e.clientX - x, e.clientY - y);
 	}
 }

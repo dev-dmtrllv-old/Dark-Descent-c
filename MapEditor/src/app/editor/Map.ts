@@ -11,13 +11,41 @@ import { Texture } from "./Texture";
 export class Map implements Serializable<SerializedMapData>
 {
 	private _name: string;
+	private _offset: Vector2 = Vector2.zero;
 	public get name() { return this._name; }
 
 	private _path: string;
 	public get path() { return this._path; }
 
+	private _isDirty: boolean = false;
+	public get isDirty() { return this._isDirty; }
+
 	public readonly renderer: MapRenderer;
 	public readonly project: UnityProject;
+
+	public get offset() { return this._offset; }
+
+	public set offset(offset: Vector2)
+	{
+		if(!Vector2.equals(this._offset, offset))
+		{
+			this._isDirty = true;
+			this._offset = offset;
+		}
+	}
+
+	private _zoom: number = 100;
+	
+	public get zoom() { return this._zoom; };
+	
+	public set zoom(value: number)
+	{
+		if (value !== this._zoom)
+		{
+			this._isDirty = true;
+			this._zoom = value;
+		}
+	}
 
 	@observable
 	private _platforms: Platform[] = [];

@@ -8,9 +8,14 @@ export class CanvasRenderer
 
 	public get canvas() { return this.canvasRef.current; }
 
-	private _ctx: CanvasRenderingContext2D | null = null;
+	private _gl: WebGL2RenderingContext | null = null;
 
-	public get ctx() { return this._ctx; }
+	public get gl()
+	{
+		if(!this._gl)
+			throw new Error(`WebGL2 is not initialized yet!`);
+		return this._gl;
+	}
 
 	public constructor() { }
 
@@ -18,12 +23,16 @@ export class CanvasRenderer
 	{
 		if (this.canvas && this.canvas.parentElement)
 		{
-			this._ctx = this.canvas.getContext("2d");
+			const gl = this.canvas.getContext("webgl2", {
+				antialias: false,
+			});
 
-			if (!this.ctx)
-				throw ("Could not get 2D context!");
+			if (!gl)
+				throw new Error();
 
-			this.ctx.translate(0.5, 0.5);
+			this._gl = gl;
+
+			gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
 			this.resizeObserver.observe(this.canvas.parentElement);
 
@@ -33,19 +42,19 @@ export class CanvasRenderer
 
 	public onUnmount = () =>
 	{
-		this._ctx = null;
+		this._gl = null;
 	}
 
 	private onResize()
 	{
-		if(this.canvas && this.canvas.parentElement)
+		if (this.canvas && this.canvas.parentElement)
 		{
 			const editor = Editor.get();
 			const p = this.canvas.parentElement;
-			
+
 			this.canvas.style.width = (this.canvas.width = p.clientWidth) + "px";
 			this.canvas.style.height = (this.canvas.height = p.clientHeight) + "px";
-			
+
 			editor.render();
 		}
 	}
@@ -57,24 +66,14 @@ export class CanvasRenderer
 
 	public clear()
 	{
-		const ctx = this.ctx;
-		
-		if(this.canvas && ctx)
-		{
-			const { clientWidth, clientHeight } = this.canvas;
-			ctx.clearRect(0, 0, clientWidth, clientHeight);
-		}
+		if (this.gl)
+			this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 	}
 
 	public render(map: Map)
 	{
-		const ctx = this.ctx;
-		
-		if(this.canvas && ctx)
-		{
-			const { clientWidth, clientHeight } = this.canvas;
-			ctx.clearRect(0, 0, clientWidth, clientHeight);
-			ctx.drawImage(map.renderer.canvas, 0, 0);
-		}
+		this.clear();
+		if (this.gl)
+			map.renderer.render(this.gl);
 	}
 }
