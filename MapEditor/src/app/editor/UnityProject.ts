@@ -130,8 +130,11 @@ export class UnityProject implements Serializable<SerializedUnityProjectData>
 		else
 			fs.readdirSync(exportDir).map(file => 
 			{
-				const name = file.substring(0, file.length - 5);
-				console.log(this.addMap(name));
+				if (file.endsWith(".json"))
+				{
+					const name = file.substring(0, file.length - 5);
+					this.addMap(name);
+				}
 			});
 
 		makeAutoObservable(this);
@@ -150,7 +153,7 @@ export class UnityProject implements Serializable<SerializedUnityProjectData>
 	private async checkAssetFiles()
 	{
 		const ignoreDirs = [...this.settings.get("ignoreAssetDirs")];
-		
+
 		const walk = (basePath: string, paths: string[], onFile: (path: string) => void) =>
 		{
 			paths.forEach((p) => 

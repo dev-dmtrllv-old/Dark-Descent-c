@@ -29,3 +29,17 @@ export const toCamelCase = (str: string, cap: boolean = true) =>
 
 	return cap ? capitalize(str) : cap;
 };
+
+export const countCharsBefore = (str: string, char: string) =>
+{
+	let count = 0;
+	for (let i = 0, l = str.length; i < l; i++)
+	{
+		if (str[i] === char)
+			count++;
+		else
+			break;
+	}
+
+	return count;
+}
