@@ -14,6 +14,10 @@ export class MapRenderer
 
 	private _buffer: GLBuffer | null = null;
 
+	private _zoom: number = 1;
+
+	public get zoom () { return this._zoom; }
+
 	public get buffer()
 	{
 		if (!this._buffer)
@@ -42,6 +46,8 @@ export class MapRenderer
 		this.shader.use();
 
 		this.shader.setAttributeBuffer("aVertexPosition", this.buffer);
+		gl.uniform1f(this.shader.getUniformLocation("uPixelRatio"), this.map.project.pixelRatio);
+		gl.uniform1f(this.shader.getUniformLocation("uZoom"), this.zoom);
 		gl.uniform1f(this.shader.getUniformLocation("uRenderTexture"), 0.0);
 
 		gl.uniform2fv(this.shader.getUniformLocation("uCanvasSize"), [canvas?.width || 0, canvas?.height || 0]);
@@ -66,8 +72,6 @@ export class MapRenderer
 				gl.bindTexture(gl.TEXTURE_2D, glTexture);
 				gl.uniform1i(this.shader.getUniformLocation("uSampler"), 0);
 				gl.uniform2fv(this.shader.getUniformLocation("uPosition"), [x, y]);
-				// gl.uniform2fv(this.shader.getUniformLocation("uCanvasSize"), [canvas?.width || 0, canvas?.height || 0]);
-				// gl.uniform4fv(this.shader.getUniformLocation("uColor"), [1, 1, 1, 1]);
 
 				gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 			});

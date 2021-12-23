@@ -24,7 +24,7 @@ export class Layer
 	@action	
 	public addTexture(texture: Texture, position: Vector2 = Vector2.zero): MapTexture
 	{
-		const o = new MapTexture(texture, position);
+		const o = new MapTexture(this.map, texture, position);
 		this._textures = [...this._textures, o];
 		return o;
 	}

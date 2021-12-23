@@ -1,26 +1,14 @@
-import { action, makeAutoObservable, observable } from "mobx";
+import { action, makeAutoObservable, makeObservable, observable } from "mobx";
+import { Map } from "./Map";
+import { MapTexture } from "./MapTexture";
+import { Texture } from "./Texture";
 import { Vector2 } from "./Vector2";
 
-export class Platform
-{
-	@observable
-	public position: Vector2 = Vector2.zero;
-
-	@action	
-	public setPosition(position: Vector2)
+export class Platform extends MapTexture
+{	
+	public constructor(map: Map, texture: Texture, position: Vector2 = Vector2.zero, layerIndex: number = 0)
 	{
-		this.position = Vector2.clone(position);
-	}
-
-	public layerIndex: number = 0;
-	
-	public constructor()
-	{
-		makeAutoObservable(this);
-	}
-
-	public render()
-	{
-
+		super(map, texture, position, layerIndex);
+		makeObservable(this);
 	}
 }

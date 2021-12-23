@@ -14,15 +14,21 @@ export class DefaultShader extends Shader<A, U>
 			uniform vec2 uPosition;
 			uniform vec4 uColor;
 
+			uniform float uZoom;
+			uniform float uPixelRatio;
+
 			varying vec4 color;
 			varying vec2 uvCoord;
 
 			void main() {
-				float x = (aVertexPosition.x + uPosition.x) / (uCanvasSize.x / 2.0);
-				float y = (aVertexPosition.y + uPosition.y) / (uCanvasSize.y / 2.0);
+				float zoom = (uZoom == 0.0 ? 1.0 : uZoom) * (uPixelRatio == 0.0 ? 1.0 : uPixelRatio);
+				
 				color = uColor;
 				uvCoord = aUVPosition;
-				gl_Position = vec4(x, y, 0.0, 1.0);
+
+				vec2 pos = ((aVertexPosition + uPosition) / (uCanvasSize / 2.0)) * zoom;
+
+				gl_Position = vec4(pos.xy, 0.0, 1.0);
 			}
 		`;
 	}
@@ -42,7 +48,14 @@ export class DefaultShader extends Shader<A, U>
 				if(uRenderTexture == 0.0)
 					gl_FragColor = color;
 				else
-					gl_FragColor = texture2D(uSampler, uvCoord);
+				{
+					vec4 c = texture2D(uSampler, uvCoord);
+					
+					// if(c.w == 0.0)
+					// 	c = vec4(0.2, 0.2, 0.0, 1.0);
+					
+					gl_FragColor = c;
+				}
 			}
 		`;
 	}
@@ -59,4 +72,6 @@ type U = {
 	uColor: "vec4";
 	uSampler: "sampler2D";
 	uRenderTexture: "float";
+	uZoom: "float";
+	uPixelRatio: "float";
 };

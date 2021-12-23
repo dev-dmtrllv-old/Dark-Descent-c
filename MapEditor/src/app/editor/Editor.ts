@@ -43,7 +43,7 @@ export class Editor
 
 	public static get() { return this._instance; };
 
-	private _selectedObject: MapTexture | Platform | null = null;
+	private _selectedObject: MapTexture | null = null;
 
 	@observable
 	private _openMaps: Map[] = [];
@@ -146,14 +146,14 @@ export class Editor
 	{
 		if (this._activeMap)
 		{
-			this._mouseDownPos = this.toCC(e);
+			this._mouseDownPos = this.mouseToMap(e);
 			this._mapStartOffset = this._activeMap.offset;
 		}
 	}
 
 	public readonly onMouseEnter = (e: React.MouseEvent) =>
 	{
-		const pos = this.toCC(e);
+		const pos = this.mouseToMap(e);
 		const map = this._activeMap;
 
 		if (map && (this._selectedTextureIndex > -1))
@@ -168,18 +168,28 @@ export class Editor
 
 	public readonly onMouseMove = (e: MouseEvent) => 
 	{
-		
+
 		if (this._activeMap)
 		{
 			const map = this._activeMap;
-			const pos = this.toCC(e);
-			
+			const pos = this.mouseToMap(e);
+
 			if (this._mouseDownPos)
 			{
 				if (this._selectedObject)
 				{
 					const offset = new Vector2(pos.x - this._mouseDownPos.x, pos.y - this._mouseDownPos.y);
-					this._selectedObject.setPosition(Vector2.add(this._startPos, offset));
+					const { width, height } = this._selectedObject.texture.canvas;
+					const e = new Vector2(width / 2, height / 2);
+
+					let p = Vector2.round(Vector2.add(this._startPos, offset));
+					
+					if (!Number.isInteger(e.x))
+						p.setX(p.x + 0.5);
+					if (!Number.isInteger(e.y))
+						p.setY(p.y + 0.5);
+
+					this._selectedObject.setPosition(p);
 				}
 				else
 				{
@@ -201,17 +211,24 @@ export class Editor
 
 	public readonly onMouseWheel = (e: WheelEvent) => 
 	{
-		const pos = this.toCC(e);
+		const pos = this.mouseToMap(e);
 	}
 
 	// converts to canvas coordinates
-	private toCC(e: { clientX: number, clientY: number })
+	private mouseToMap(e: { clientX: number, clientY: number })
 	{
+		const zoom = this._activeMap ? this._activeMap.renderer.zoom : 1;
+		const ratio = this._activeMap ? this._activeMap.project.pixelRatio : 1;
+
+		const z = zoom * ratio;
+
 		const c = this.canvasRenderer.canvas!;
 		let { x, y } = c.getBoundingClientRect();
-		x = e.clientX - x - (c.width / 2);
-		y = (e.clientY - y - (c.height / 2)) * -1;
-		return Vector2.round(new Vector2(x, y));
+
+		x = (e.clientX - x - (c.width / 2)) / z;
+		y = ((e.clientY - y - (c.height / 2)) * -1) / z;
+		
+		return new Vector2(x, y);
 	}
 
 	@action

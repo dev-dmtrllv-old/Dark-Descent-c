@@ -25,7 +25,7 @@ export class CanvasRenderer
 		{
 			const gl = this.canvas.getContext("webgl2", {
 				alpha: true,
-				desynchronized: true,
+				desynchronized: false,
 				antialias: false,
 				powerPreference: "high-performance",
 				preserveDrawingBuffer: true,
@@ -37,7 +37,7 @@ export class CanvasRenderer
 			this._gl = gl;
 
 			gl.clearColor(0.0, 0.0, 0.0, 1.0);
-			gl.disable(gl.DEPTH_TEST);
+			// gl.imageSmoo
 
 			this.resizeObserver.observe(this.canvas.parentElement);
 
