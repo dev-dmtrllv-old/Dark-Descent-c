@@ -5,6 +5,7 @@ import { Shader } from "./Shader";
 import { DefaultShader } from "./shaders/DefaultShader";
 import { Vector2 } from "./Vector2";
 import { CanvasRenderer } from "./CanvasRenderer";
+import { action, observable } from "mobx";
 
 export class MapRenderer
 {
@@ -14,9 +15,13 @@ export class MapRenderer
 
 	private _buffer: GLBuffer | null = null;
 
+	@observable
 	private _zoom: number = 1;
 
 	public get zoom () { return this._zoom; }
+
+	@action
+	public setZoom (zoom: number) { return this._zoom = zoom; }
 
 	public get buffer()
 	{
@@ -53,6 +58,7 @@ export class MapRenderer
 		gl.uniform2fv(this.shader.getUniformLocation("uCanvasSize"), [canvas?.width || 0, canvas?.height || 0]);
 		gl.uniform2fv(this.shader.getUniformLocation("uPosition"), [0, 0]);
 		gl.uniform4fv(this.shader.getUniformLocation("uColor"), [1, 1, 1, 1]);
+		gl.uniform2fv(this.shader.getUniformLocation("uMapOffset"), [this.map.offset.x, this.map.offset.y]);
 
 		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 

@@ -7,7 +7,7 @@ import { showOpenDialog } from "app/dialogs/OpenDialog";
 import { Vector2 } from "./Vector2";
 import { Texture } from "./Texture";
 import { MapTexture } from "./MapTexture";
-import { Platform } from "./Platform";
+import { utils } from "utils";
 
 export class Editor
 {
@@ -57,7 +57,8 @@ export class Editor
 	private _mouseDownPos: Vector2 | null = null;
 	private _startPos: Vector2 = Vector2.zero;
 	private _mapStartOffset: Vector2 = Vector2.zero;
-	private _zoomSensitivity: number = 3;
+	private _zoomSensitivity: number = 8;
+	private _mouseDownButton: -1 | 0 | 1 | 2 = -1;
 
 	@computed
 	public get projectTextures(): Texture[] { return this.activeMap?.project.textures || []; }
@@ -147,6 +148,7 @@ export class Editor
 		if (this._activeMap)
 		{
 			this._mouseDownPos = this.mouseToMap(e);
+			this._mouseDownButton = e.button as any;
 			this._mapStartOffset = this._activeMap.offset;
 		}
 	}
@@ -183,17 +185,19 @@ export class Editor
 					const e = new Vector2(width / 2, height / 2);
 
 					let p = Vector2.round(Vector2.add(this._startPos, offset));
+
+					let n = Vector2.add(p, Vector2.mul(map.offset, new Vector2(-1, -1)));
 					
 					if (!Number.isInteger(e.x))
-						p.setX(p.x + 0.5);
+						n.setX(n.x + 0.5);
 					if (!Number.isInteger(e.y))
-						p.setY(p.y + 0.5);
+						n.setY(n.y + 0.5);
 
-					this._selectedObject.setPosition(p);
+					this._selectedObject.setPosition(n);
 				}
-				else
+				else if (this._mouseDownButton === 1)
 				{
-					map.offset = Vector2.add(this._mapStartOffset, Vector2.sub(this._mouseDownPos, pos));
+					map.offset = Vector2.add(this._mapStartOffset, Vector2.sub(pos, this._mouseDownPos));
 				}
 			}
 
@@ -205,6 +209,7 @@ export class Editor
 	public readonly onMouseUp = (e: MouseEvent) => 
 	{
 		this._mouseDownPos = null;
+		this._mouseDownButton = -1;
 		this.selectTexture(-1);
 		this._selectedObject = null;
 	}
@@ -212,22 +217,38 @@ export class Editor
 	public readonly onMouseWheel = (e: WheelEvent) => 
 	{
 		const pos = this.mouseToMap(e);
+		const map = this._activeMap;
+		if(map)
+		{
+			const z = map.renderer.zoom;
+			const d = (this._zoomSensitivity * -z * Math.sign(e.deltaY)) / 100;
+			// console.log(z + d);
+			map.renderer.setZoom(utils.math.clamp(z + d, Editor.minZoom / 100, Editor.maxZoom / 100));
+
+			this.render();
+		}
 	}
 
 	// converts to canvas coordinates
 	private mouseToMap(e: { clientX: number, clientY: number })
 	{
-		const zoom = this._activeMap ? this._activeMap.renderer.zoom : 1;
-		const ratio = this._activeMap ? this._activeMap.project.pixelRatio : 1;
+		let zoom = 1;
+		let ratio = 1;
+
+		if (this._activeMap)
+		{
+			zoom = this._activeMap.renderer.zoom;
+			ratio = this._activeMap.project.pixelRatio;
+		}
 
 		const z = zoom * ratio;
 
 		const c = this.canvasRenderer.canvas!;
 		let { x, y } = c.getBoundingClientRect();
 
-		x = (e.clientX - x - (c.width / 2)) / z;
-		y = ((e.clientY - y - (c.height / 2)) * -1) / z;
-		
+		x = ((e.clientX - x  - (c.width / 2)) / z);
+		y = (((e.clientY - y - (c.height / 2)) * -1) / z);
+
 		return new Vector2(x, y);
 	}
 

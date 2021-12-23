@@ -35,19 +35,6 @@ export class Map implements Serializable<SerializedMapData>
 		}
 	}
 
-	private _zoom: number = 100;
-
-	public get zoom() { return this._zoom; };
-
-	public set zoom(value: number)
-	{
-		if (value !== this._zoom)
-		{
-			this._isDirty = true;
-			this._zoom = value;
-		}
-	}
-
 	@observable
 	private _layers: Layer[] = [new Layer(this)];
 

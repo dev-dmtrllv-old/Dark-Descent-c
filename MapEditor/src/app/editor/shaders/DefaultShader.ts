@@ -13,7 +13,8 @@ export class DefaultShader extends Shader<A, U>
 			uniform vec2 uCanvasSize;
 			uniform vec2 uPosition;
 			uniform vec4 uColor;
-
+			uniform vec2 uMapOffset;
+			
 			uniform float uZoom;
 			uniform float uPixelRatio;
 
@@ -26,7 +27,7 @@ export class DefaultShader extends Shader<A, U>
 				color = uColor;
 				uvCoord = aUVPosition;
 
-				vec2 pos = ((aVertexPosition + uPosition) / (uCanvasSize / 2.0)) * zoom;
+				vec2 pos = ((aVertexPosition + uPosition + uMapOffset) / (uCanvasSize / 2.0)) * zoom;
 
 				gl_Position = vec4(pos.xy, 0.0, 1.0);
 			}
@@ -74,4 +75,5 @@ type U = {
 	uRenderTexture: "float";
 	uZoom: "float";
 	uPixelRatio: "float";
+	uMapOffset: "vec2";
 };
