@@ -20,6 +20,9 @@ app.whenReady().then(async () =>
 	win.setMenu(null);
 
 	await win.loadFile("./dist/app/index.html");
+
+	win.show();
+	win.webContents.openDevTools();
 });
 
 ipcMain.on("ready", (e, ...args) => 
@@ -45,5 +48,10 @@ ipcMain.on("toggle-dev-window", () =>
 });
 
 ipcMain.handle("open-dir", async (e) => await dialog.showOpenDialog(BrowserWindow.fromWebContents(e.sender), { properties: ["openDirectory"] }));
+
+ipcMain.on("reload", (e) => 
+{
+	e.sender.reload();
+});
 
 app.on("quit", () => app.quit());

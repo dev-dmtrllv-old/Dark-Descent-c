@@ -7,6 +7,7 @@ import { UnityProject } from "./UnityProject";
 import { Vector2 } from "./Vector2";
 import fs from "fs";
 import { Texture } from "./Texture";
+import { Layer } from "./Layer";
 
 export class Map implements Serializable<SerializedMapData>
 {
@@ -27,7 +28,7 @@ export class Map implements Serializable<SerializedMapData>
 
 	public set offset(offset: Vector2)
 	{
-		if(!Vector2.equals(this._offset, offset))
+		if (!Vector2.equals(this._offset, offset))
 		{
 			this._isDirty = true;
 			this._offset = offset;
@@ -35,9 +36,9 @@ export class Map implements Serializable<SerializedMapData>
 	}
 
 	private _zoom: number = 100;
-	
+
 	public get zoom() { return this._zoom; };
-	
+
 	public set zoom(value: number)
 	{
 		if (value !== this._zoom)
@@ -48,10 +49,10 @@ export class Map implements Serializable<SerializedMapData>
 	}
 
 	@observable
-	private _platforms: Platform[] = [];
+	private _layers: Layer[] = [new Layer(this)];
 
 	@observable
-	private _backgroundLayers: Texture[] = [];
+	private _activeLayerIndex: number = 0;
 
 	@observable
 	private _backgroundLayerOffsetSensitivity: number = 100; // percentage
@@ -72,13 +73,13 @@ export class Map implements Serializable<SerializedMapData>
 	public get isOpen() { return this._isOpen; }
 
 	@computed
-	public get platforms() { return [...this._platforms]; }
+	public get layers() { return [...this._layers]; }
 
 	@computed
-	public get backgroundLayers() { return [...this._backgroundLayers]; }
+	public get LayerSensitivity() { return this._backgroundLayerOffsetSensitivity; }
 
 	@computed
-	public get backgroundLayerSensitivity() { return this._backgroundLayerOffsetSensitivity; }
+	public get activeLayer() { return this._layers[this._activeLayerIndex]; }
 
 	public constructor(project: UnityProject, name: string, path: string);
 	public constructor(project: UnityProject, name: string, path: string, width: number, height: number);
@@ -134,6 +135,23 @@ export class Map implements Serializable<SerializedMapData>
 	{
 		fs.writeFileSync(this._path, JSON.stringify(this.serialize()), "utf-8");
 	}
+
+	@action
+	public removeLayer(index: number)
+	{
+		if (this._layers.length > 1)
+		{
+			const l = [...this._layers];
+			l.splice(index, 1);
+			this._layers = l;
+
+			if (this._activeLayerIndex > this._layers.length - 1)
+				this._activeLayerIndex = this._layers.length - 1;
+		}
+	}
+
+	@action
+	public addLayer() { this._layers = [...this._layers, new Layer(this)]; this._activeLayerIndex = this._layers.length - 1; }
 }
 
 type SerializedMapData = {

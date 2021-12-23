@@ -1,10 +1,12 @@
 import fs from "fs";
 import path, { basename } from "path";
+import { GLBuffer } from "./GLBuffer";
+import { Vector2 } from "./Vector2";
 
 export class Texture
 {
 	private static readonly textures: { [path: string]: Texture } = {};
-
+	
 	public static get(path: string): Texture
 	{
 		let t = this.textures[path]
@@ -15,15 +17,22 @@ export class Texture
 		}
 		return t;
 	}
-
+	
 	public readonly path: string;
-
+	
 	private readonly _img: HTMLImageElement = document.createElement("img");
-
+	
 	private readonly _canvas: HTMLCanvasElement = document.createElement("canvas");
+	
+	private _buffer: GLBuffer | null = null;
+
+	public get buffer()
+	{
+		return this._buffer || GLBuffer.defaultBuffer;
+	}
 
 	private _name: string = "";
-
+	
 	public get name() { return this._name; }
 
 	private _base64: string = "";
@@ -152,7 +161,7 @@ export class Texture
 		return this.metaInfo.find((s, _i) => s.trimStart().startsWith(key));
 	}
 
-	public load()
+	public load(gl: WebGLRenderingContext)
 	{
 		return new Promise<void>((resolve, reject) => 
 		{
@@ -162,6 +171,16 @@ export class Texture
 				{
 					this._isLoaded = true;
 					this._base64 = this.getImageData();
+
+					const w = (this._spriteInfo ? this._spriteInfo.width : this._img.width) / 2;
+					const h = (this._spriteInfo ? this._spriteInfo.height : this._img.height) / 2;
+					this._buffer = new GLBuffer(gl, [
+						new Vector2(-w, h),
+						new Vector2(w, h),
+						new Vector2(-w, -h),
+						new Vector2(w, -h),
+					]);
+
 					resolve();
 				};
 				this._img.onerror = reject;
@@ -172,6 +191,11 @@ export class Texture
 				resolve();
 			}
 		});
+	}
+
+	public render(gl: WebGLRenderingContext)
+	{
+		
 	}
 }
 

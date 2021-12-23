@@ -13,6 +13,7 @@
 	"license": "ISC",
 	"devDependencies": {
 		"@types/express": "^4.17.13",
+		"@types/gl-matrix": "^3.2.0",
 		"@types/node": "^16.10.1",
 		"@types/react": "^17.0.24",
 		"@types/react-dom": "^17.0.9",
@@ -44,6 +45,7 @@
 	"dependencies": {
 		"@types/offscreencanvas": "^2019.6.4",
 		"express": "^4.17.1",
+		"gl-matrix": "^3.4.3",
 		"mobx": "^6.3.3",
 		"mobx-react": "^7.2.0",
 		"react": "^17.0.2",

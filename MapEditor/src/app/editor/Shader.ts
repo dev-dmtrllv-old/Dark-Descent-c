@@ -15,7 +15,7 @@ export abstract class Shader<A extends Attributes, U extends Attributes>
 		return s as T;
 	}
 
-	public readonly gl: WebGL2RenderingContext;
+	public readonly gl: WebGLRenderingContext;
 	public readonly shaderProgram: WebGLProgram;
 
 	private _attributes: AttributeLocations<A>;
@@ -31,7 +31,7 @@ export abstract class Shader<A extends Attributes, U extends Attributes>
 		return this._uniforms[key];
 	}
 
-	public constructor(gl: WebGL2RenderingContext)
+	public constructor(gl: WebGLRenderingContext)
 	{
 		this.gl = gl;
 		this.shaderProgram = this.createProgram();
@@ -120,10 +120,14 @@ export abstract class Shader<A extends Attributes, U extends Attributes>
 			}
 			else if(attributeType === "uniform" && !locations.uniforms[name])
 			{
+				console.log("get uniform", name);
+				
 				const uniformLoc = this.gl.getUniformLocation(this.shaderProgram, name);
+
 				if(!uniformLoc)
-					throw new Error(`Could not get uniform location!`);
-				locations.uniforms[name as keyof U] = uniformLoc;
+					console.warn(`Could not get uniform location!`);
+				else
+					locations.uniforms[name as keyof U] = uniformLoc;
 			}
 		});
 
@@ -139,7 +143,7 @@ export abstract class Shader<A extends Attributes, U extends Attributes>
 	protected abstract fragmentSource(): string;
 }
 
-export type ShaderType<T extends Shader<any, any>> = new (gl: WebGL2RenderingContext) => T;
+export type ShaderType<T extends Shader<any, any>> = new (gl: WebGLRenderingContext) => T;
 
 export type ShaderAttrType = "float" | "bool" | "vec2" | "vec3" | "vec4" | "mat3" | "mat4";
 

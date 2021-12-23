@@ -11,6 +11,14 @@ import { RootStore } from "./stores/RootStore";
 
 const exec = (callback: Function) => callback();
 
+new Promise(() => 
+{
+	
+}).then(() => 
+{
+	debugger;
+}).catch(console.error);
+
 exec(async () => 
 {
 	const root = document.createElement("div");

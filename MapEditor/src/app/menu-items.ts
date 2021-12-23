@@ -23,5 +23,7 @@ export const MENU_ITEMS = [
 	new MenuItem("View", [
 		new MenuItem("Toggle Developer Window", () => ipcRenderer.send("toggle-dev-window")),
 	]),
-	new MenuItem("Help", []),
+	new MenuItem("Help", [
+		new MenuItem("Reload", () => ipcRenderer.send("reload"))
+	]),
 ];

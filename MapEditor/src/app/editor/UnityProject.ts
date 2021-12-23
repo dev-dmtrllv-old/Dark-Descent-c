@@ -5,6 +5,7 @@ import { action, computed, makeAutoObservable, observable } from "mobx";
 import { utils } from "utils";
 import { Serializable, SerializedType } from "app/Serializable";
 import { Texture } from "./Texture";
+import { Editor } from "./Editor";
 
 export type UnityProjectSettingsProps = {
 	spriteDir: string;
@@ -182,7 +183,7 @@ export class UnityProject implements Serializable<SerializedUnityProjectData>
 			}
 		});
 
-		await Promise.all(textures.map(t => t.load()));
+		await Promise.all(textures.map(t => t.load(Editor.get().canvasRenderer.gl)));
 
 		this._textures = textures;
 	}

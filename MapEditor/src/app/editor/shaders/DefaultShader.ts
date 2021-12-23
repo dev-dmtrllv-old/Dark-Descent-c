@@ -5,13 +5,14 @@ export class DefaultShader extends Shader<A, U>
 	protected vertexSource(): string
 	{
 		return `
-			attribute vec4 aVertexPosition;
+			attribute vec2 aVertexPosition;
 		
-			uniform mat4 uModelViewMatrix;
-			uniform mat4 uProjectionMatrix;
-		
+			uniform vec2 uCanvasSize;
+
 			void main() {
-				gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+				float x = aVertexPosition.x / (uCanvasSize.x / 2.0);
+				float y = aVertexPosition.y / (uCanvasSize.y / 2.0);
+				gl_Position = vec4(x, y, 0.0, 1.0);
 			}
 		`;
 	}
@@ -31,6 +32,5 @@ type A = {
 };
 
 type U = {
-	uModelViewMatrix: "mat4";
-	uProjectionMatrix: "mat4";
+	uCanvasSize: "vec2";
 };

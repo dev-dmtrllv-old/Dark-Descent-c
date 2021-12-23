@@ -43,7 +43,7 @@ const restart = () =>
 				}
 				else
 				{
-					proc = spawn("electron", [".", "--dev"], { cwd: path.resolve(__dirname, ".."), stdio: "inherit" })
+					proc = spawn("electron", ["--remote-debugging-port=9223", ".", "--dev"], { cwd: path.resolve(__dirname, ".."), stdio: "inherit" })
 				}
 			}, 500);
 		});
