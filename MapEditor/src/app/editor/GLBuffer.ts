@@ -31,10 +31,7 @@ export class GLBuffer
 		const b = gl.createBuffer()!;
 		gl.bindBuffer(gl.ARRAY_BUFFER, b);
 
-		const p = positions.map(p => [p.x, p.y]).flat();
-		console.log(p);
-
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(p), gl.STATIC_DRAW);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions.map(p => [p.x, p.y]).flat()), gl.STATIC_DRAW);
 
 		this.buffer = b;
 	}

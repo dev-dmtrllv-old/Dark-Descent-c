@@ -20,7 +20,7 @@ export class Editor
 	public onSelect = (index: number) => action((e: React.MouseEvent<Element, MouseEvent>) =>
 	{
 		if (this._openMaps[index] && (this._activeMap !== this._openMaps[index]))
-			this._activeMap = this._openMaps[index];
+			this.setActiveMap(this._openMaps[index]);
 	})
 
 	public onClose = (index: number) => action((e: React.MouseEvent<Element, MouseEvent>) =>
@@ -31,7 +31,8 @@ export class Editor
 			{
 				e.preventDefault();
 				e.stopPropagation();
-				showOpenDialog();
+				if (this._openMaps.length <= 0)
+					showOpenDialog();
 			}
 		}
 	});
@@ -90,7 +91,14 @@ export class Editor
 	}
 
 	@action
-	private setActiveMap = (map: Map) => this._activeMap = map;
+	private setActiveMap = (map: Map) => 
+	{
+		if (this._activeMap !== map)
+		{
+			this._activeMap = map;
+			this.render();
+		}
+	};
 
 	@action
 	public async addToOpenMaps(map: Map)
@@ -118,6 +126,10 @@ export class Editor
 
 			if (maps.length === 0)
 				this._activeMap = null;
+			else if (index > this._openMaps.length - 1)
+				this._activeMap = this._openMaps[this._openMaps.length - 1];
+			else
+				this._activeMap = this._openMaps[index];
 
 			this.selectTexture(-1);
 			this.render();
@@ -127,16 +139,16 @@ export class Editor
 
 	public readonly onMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => 
 	{
-		if(this._activeMap)
+		if (this._activeMap)
 		{
 			this._mouseDownPos = this.toCC(e);
 			this._mapStartOffset = this._activeMap.offset;
-		}	
+		}
 	}
 
 	public readonly onMouseMove = (e: MouseEvent) => 
 	{
-		if(this._mouseDownPos && this._activeMap)
+		if (this._mouseDownPos && this._activeMap)
 		{
 			const map = this._activeMap;
 			const pos = this.toCC(e);
@@ -144,17 +156,17 @@ export class Editor
 			console.log(map.offset.serialize());
 		}
 	}
-	
+
 	public readonly onMouseUp = (e: MouseEvent) => 
 	{
-		if(this.selectedTextureIndex > -1)
+		if (this.selectedTextureIndex > -1)
 		{
 			console.log(this.projectTextures[this.selectedTextureIndex]);
 		}
 		this._mouseDownPos = null;
 		this.selectTexture(-1);
 	}
-	
+
 	public readonly onMouseWheel = (e: WheelEvent) => 
 	{
 		const pos = this.toCC(e);

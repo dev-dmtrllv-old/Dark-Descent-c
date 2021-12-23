@@ -28,6 +28,9 @@
 		height: 6px;
 		cursor: ns-resize;
 	}
-	background-color: rgba(255, 255, 255, 0.1);
+	transition: background-color 150ms;
+	&:hover {
+		background-color: rgb(99, 99, 99);
+	}
 	z-index: 800;
 }

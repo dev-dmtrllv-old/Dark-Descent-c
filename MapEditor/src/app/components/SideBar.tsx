@@ -11,8 +11,8 @@ export const SideBar = () =>
 	return (
 		<FlexItem base={base}>
 			<PanelSlider position="left" onChange={setBase} base={base} popBarier={15}/>
-			<View position="absolute" fill theme="secundary">
-				SideBar
+			<View className="side-bar" position="absolute" fill theme="secundary">
+				
 			</View>
 		</FlexItem>
 	)

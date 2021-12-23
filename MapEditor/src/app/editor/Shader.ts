@@ -38,7 +38,6 @@ export abstract class Shader<A extends Attributes, U extends Attributes>
 		const { attributes, uniforms } = this.getLocations();
 		this._attributes = attributes as any;
 		this._uniforms = uniforms as any;
-		console.log(this._attributes, this._uniforms);
 	}
 
 	private loadShader(type: number, source: string)
@@ -119,9 +118,7 @@ export abstract class Shader<A extends Attributes, U extends Attributes>
 				locations.attributes[name as keyof A] = this.gl.getAttribLocation(this.shaderProgram, name);
 			}
 			else if(attributeType === "uniform" && !locations.uniforms[name])
-			{
-				console.log("get uniform", name);
-				
+			{	
 				const uniformLoc = this.gl.getUniformLocation(this.shaderProgram, name);
 
 				if(!uniformLoc)
