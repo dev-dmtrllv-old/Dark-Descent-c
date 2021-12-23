@@ -6,7 +6,7 @@ import { Vector2 } from "./Vector2";
 export class Texture
 {
 	private static readonly textures: { [path: string]: Texture } = {};
-	
+
 	public static get(path: string): Texture
 	{
 		let t = this.textures[path]
@@ -17,22 +17,23 @@ export class Texture
 		}
 		return t;
 	}
-	
-	public readonly path: string;
-	
-	private readonly _img: HTMLImageElement = document.createElement("img");
-	
-	private readonly _canvas: HTMLCanvasElement = document.createElement("canvas");
-	
-	private _buffer: GLBuffer | null = null;
 
-	public get buffer()
-	{
-		return this._buffer || GLBuffer.defaultBuffer;
-	}
+	public readonly path: string;
+
+	private readonly _img: HTMLImageElement = document.createElement("img");
+
+	public readonly canvas: HTMLCanvasElement = document.createElement("canvas");
+
+	private _sizeBuffer: GLBuffer | null = null;
+
+	public get sizeBuffer() { return this._sizeBuffer || GLBuffer.defaultBuffer; }
+
+	private _uvBuffer: GLBuffer | null = null;
+
+	public get uvBuffer() { return this._uvBuffer || GLBuffer.defaultUVBuffer; }
 
 	private _name: string = "";
-	
+
 	public get name() { return this._name; }
 
 	private _base64: string = "";
@@ -132,27 +133,27 @@ export class Texture
 
 			const id = ctx.getImageData(this._spriteInfo.x, this._img.height - (this._spriteInfo.y + this._spriteInfo.height), this._spriteInfo.width, this._spriteInfo.height, { colorSpace: "srgb" });
 
-			const ctx2 = this._canvas.getContext("2d")!;
+			const ctx2 = this.canvas.getContext("2d")!;
 			ctx2.imageSmoothingEnabled = false;
 			ctx2.imageSmoothingQuality = "low";
 
-			this._canvas.style.width = (this._canvas.width = this._spriteInfo.width) + "px";
-			this._canvas.style.height = (this._canvas.height = this._spriteInfo.height) + "px";
+			this.canvas.style.width = (this.canvas.width = this._spriteInfo.width) + "px";
+			this.canvas.style.height = (this.canvas.height = this._spriteInfo.height) + "px";
 
 			ctx2.putImageData(id, 0, 0);
-			return this._canvas.toDataURL("image/png");
+			return this.canvas.toDataURL("image/png");
 		}
 		else
 		{
-			this._canvas.style.width = (this._canvas.width = this._img.width) + "px";
-			this._canvas.style.height = (this._canvas.height = this._img.height) + "px";
+			this.canvas.style.width = (this.canvas.width = this._img.width) + "px";
+			this.canvas.style.height = (this.canvas.height = this._img.height) + "px";
 
-			const ctx = this._canvas.getContext("2d", {})!;
+			const ctx = this.canvas.getContext("2d", {})!;
 			ctx.imageSmoothingEnabled = false;
 			ctx.imageSmoothingQuality = "low";
 			ctx.drawImage(this._img, 0, 0);
 
-			return this._canvas.toDataURL("image/png");
+			return this.canvas.toDataURL("image/png");
 		}
 	}
 
@@ -174,12 +175,15 @@ export class Texture
 
 					const w = (this._spriteInfo ? this._spriteInfo.width : this._img.width) / 2;
 					const h = (this._spriteInfo ? this._spriteInfo.height : this._img.height) / 2;
-					this._buffer = new GLBuffer(gl, [
-						new Vector2(-w, h),
+
+					this._sizeBuffer = new GLBuffer(gl, [
 						new Vector2(w, h),
-						new Vector2(-w, -h),
+						new Vector2(-w, h),
 						new Vector2(w, -h),
+						new Vector2(-w, -h),
 					]);
+
+					this._uvBuffer = GLBuffer.defaultUVBuffer;
 
 					resolve();
 				};
@@ -195,7 +199,7 @@ export class Texture
 
 	public render(gl: WebGLRenderingContext)
 	{
-		
+
 	}
 }
 

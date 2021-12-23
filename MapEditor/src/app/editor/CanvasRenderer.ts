@@ -23,8 +23,12 @@ export class CanvasRenderer
 	{
 		if (this.canvas && this.canvas.parentElement)
 		{
-			const gl = this.canvas.getContext("webgl", {
+			const gl = this.canvas.getContext("webgl2", {
+				alpha: true,
+				desynchronized: true,
 				antialias: false,
+				powerPreference: "high-performance",
+				preserveDrawingBuffer: true,
 			});
 
 			if (!gl)
@@ -33,6 +37,7 @@ export class CanvasRenderer
 			this._gl = gl;
 
 			gl.clearColor(0.0, 0.0, 0.0, 1.0);
+			gl.disable(gl.DEPTH_TEST);
 
 			this.resizeObserver.observe(this.canvas.parentElement);
 
@@ -78,6 +83,7 @@ export class CanvasRenderer
 		{
 			const gl = this.gl;
 			gl.clearDepth(1.0);
+
 			gl.enable(gl.DEPTH_TEST);
 			gl.depthFunc(gl.LEQUAL);
 

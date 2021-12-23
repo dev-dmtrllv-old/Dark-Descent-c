@@ -15,13 +15,29 @@ export class GLBuffer
 		if (!this._defaultBuffer)
 		{
 			this._defaultBuffer = new GLBuffer(Editor.get().canvasRenderer.gl, [
-				new Vector2(-1.0, 1.0),
 				new Vector2(1.0, 1.0),
-				new Vector2(-1.0, -1.0),
+				new Vector2(-1.0, 1.0),
 				new Vector2(1.0, -1.0),
+				new Vector2(-1.0, -1.0),
 			]);
 		}
 		return this._defaultBuffer as GLBuffer;
+	}
+
+	private static _defaultUVBuffer: GLBuffer | null = null;
+
+	public static get defaultUVBuffer(): GLBuffer
+	{
+		if (!this._defaultUVBuffer)
+		{
+			this._defaultUVBuffer = new GLBuffer(Editor.get().canvasRenderer.gl, [
+				new Vector2(1, 0),
+				new Vector2(0, 0),
+				new Vector2(1, 1),
+				new Vector2(0, 1),
+			]);
+		}
+		return this._defaultUVBuffer as GLBuffer;
 	}
 
 	public readonly buffer: WebGLBuffer;

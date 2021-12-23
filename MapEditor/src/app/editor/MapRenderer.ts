@@ -9,9 +9,9 @@ import { CanvasRenderer } from "./CanvasRenderer";
 export class MapRenderer
 {
 	public readonly map: Map;
-	
+
 	private get shader() { return Shader.get(DefaultShader); }
-	
+
 	private _buffer: GLBuffer | null = null;
 
 	public get buffer()
@@ -39,23 +39,40 @@ export class MapRenderer
 	{
 		const { gl, canvas } = canvasRenderer;
 
-		this.buffer.use(gl);
-
-		gl.vertexAttribPointer(this.shader.getAttribute("aVertexPosition"), 2, gl.FLOAT, false, 0, 0);
-		gl.enableVertexAttribArray(this.shader.getAttribute("aVertexPosition"));
-
 		this.shader.use();
 
-		gl.uniform2fv(this.shader.getUniform("uCanvasSize"), [canvas?.width || 0, canvas?.height || 0]);
+		this.shader.setAttributeBuffer("aVertexPosition", this.buffer);
+		gl.uniform1f(this.shader.getUniformLocation("uRenderTexture"), 0.0);
+
+		gl.uniform2fv(this.shader.getUniformLocation("uCanvasSize"), [canvas?.width || 0, canvas?.height || 0]);
+		gl.uniform2fv(this.shader.getUniformLocation("uPosition"), [0, 0]);
+		gl.uniform4fv(this.shader.getUniformLocation("uColor"), [1, 1, 1, 1]);
 
 		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
+		gl.enable(gl.BLEND);
+		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+		gl.uniform1f(this.shader.getUniformLocation("uRenderTexture"), 1.0);
+
 		this.map.layers.forEach(layer => 
 		{
-			layer.textures.forEach(t => 
+			layer.textures.forEach(({ position, texture, glTexture }) => 
 			{
-				console.log(t);
+				const { x, y } = position;
+
+				this.shader.setAttributeBuffer("aVertexPosition", texture.sizeBuffer);
+				this.shader.setAttributeBuffer("aUVPosition", texture.uvBuffer);
+				gl.activeTexture(gl.TEXTURE0);
+				gl.bindTexture(gl.TEXTURE_2D, glTexture);
+				gl.uniform1i(this.shader.getUniformLocation("uSampler"), 0);
+				gl.uniform2fv(this.shader.getUniformLocation("uPosition"), [x, y]);
+				// gl.uniform2fv(this.shader.getUniformLocation("uCanvasSize"), [canvas?.width || 0, canvas?.height || 0]);
+				// gl.uniform4fv(this.shader.getUniformLocation("uColor"), [1, 1, 1, 1]);
+
+				gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 			});
 		});
+
+		gl.disable(gl.BLEND);
 	}
 }

@@ -6,6 +6,8 @@ import { Map } from "./Map"
 import { showOpenDialog } from "app/dialogs/OpenDialog";
 import { Vector2 } from "./Vector2";
 import { Texture } from "./Texture";
+import { MapTexture } from "./MapTexture";
+import { Platform } from "./Platform";
 
 export class Editor
 {
@@ -21,7 +23,7 @@ export class Editor
 	{
 		if (this._openMaps[index] && (this._activeMap !== this._openMaps[index]))
 			this.setActiveMap(this._openMaps[index]);
-	})
+	});
 
 	public onClose = (index: number) => action((e: React.MouseEvent<Element, MouseEvent>) =>
 	{
@@ -41,6 +43,8 @@ export class Editor
 
 	public static get() { return this._instance; };
 
+	private _selectedObject: MapTexture | Platform | null = null;
+
 	@observable
 	private _openMaps: Map[] = [];
 
@@ -51,6 +55,7 @@ export class Editor
 	private _selectedTextureIndex: number = -1;
 
 	private _mouseDownPos: Vector2 | null = null;
+	private _startPos: Vector2 = Vector2.zero;
 	private _mapStartOffset: Vector2 = Vector2.zero;
 	private _zoomSensitivity: number = 3;
 
@@ -146,25 +151,52 @@ export class Editor
 		}
 	}
 
-	public readonly onMouseMove = (e: MouseEvent) => 
+	public readonly onMouseEnter = (e: React.MouseEvent) =>
 	{
-		if (this._mouseDownPos && this._activeMap)
+		const pos = this.toCC(e);
+		const map = this._activeMap;
+
+		if (map && (this._selectedTextureIndex > -1))
 		{
-			const map = this._activeMap;
-			const pos = this.toCC(e);
-			map.offset = Vector2.add(this._mapStartOffset, Vector2.sub(this._mouseDownPos, pos));
-			console.log(map.offset.serialize());
+			this._mouseDownPos = Vector2.clone(pos);
+			this._startPos = Vector2.clone(pos);
+			this._selectedObject = map.activeLayer.addTexture(map.project.textures[this._selectedTextureIndex], pos);
+			this.selectTexture(-1);
+			this.render();
 		}
 	}
 
+	public readonly onMouseMove = (e: MouseEvent) => 
+	{
+		
+		if (this._activeMap)
+		{
+			const map = this._activeMap;
+			const pos = this.toCC(e);
+			
+			if (this._mouseDownPos)
+			{
+				if (this._selectedObject)
+				{
+					const offset = new Vector2(pos.x - this._mouseDownPos.x, pos.y - this._mouseDownPos.y);
+					this._selectedObject.setPosition(Vector2.add(this._startPos, offset));
+				}
+				else
+				{
+					map.offset = Vector2.add(this._mapStartOffset, Vector2.sub(this._mouseDownPos, pos));
+				}
+			}
+
+			this.render();
+		}
+	}
+
+	@action
 	public readonly onMouseUp = (e: MouseEvent) => 
 	{
-		if (this.selectedTextureIndex > -1)
-		{
-			console.log(this.projectTextures[this.selectedTextureIndex]);
-		}
 		this._mouseDownPos = null;
 		this.selectTexture(-1);
+		this._selectedObject = null;
 	}
 
 	public readonly onMouseWheel = (e: WheelEvent) => 
@@ -176,8 +208,10 @@ export class Editor
 	private toCC(e: { clientX: number, clientY: number })
 	{
 		const c = this.canvasRenderer.canvas!;
-		const { x, y } = c.getBoundingClientRect();
-		return new Vector2(e.clientX - x, e.clientY - y);
+		let { x, y } = c.getBoundingClientRect();
+		x = e.clientX - x - (c.width / 2);
+		y = (e.clientY - y - (c.height / 2)) * -1;
+		return Vector2.round(new Vector2(x, y));
 	}
 
 	@action

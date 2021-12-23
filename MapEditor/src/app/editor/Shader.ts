@@ -1,7 +1,29 @@
 import { Editor } from "./Editor";
+import { GLBuffer } from "./GLBuffer";
 
-export abstract class Shader<A extends Attributes, U extends Attributes>
+export abstract class Shader<A extends Attributes, U extends Uniforms>
 {
+	private static readonly typeToComponentNum = (type: ShaderAttrType) =>
+	{
+		switch (type)
+		{
+			case "float":
+				return 1;
+			case "vec2":
+				return 2;
+			case "vec3":
+				return 3;
+			case "vec4":
+			case "mat2":
+				return 4;
+			case "mat3":
+				return 9;
+			case "mat4":
+				return 16
+		}
+		return 0;
+	}
+
 	private static readonly shaders: Shader<any, any>[] = [];
 
 	public static get<T extends Shader<any, any>>(type: ShaderType<T>): T
@@ -29,6 +51,16 @@ export abstract class Shader<A extends Attributes, U extends Attributes>
 	public getUniform(key: keyof UniformLocations<U>)
 	{
 		return this._uniforms[key];
+	}
+
+	public getAttributeLocation(key: keyof AttributeLocations<A>)
+	{
+		return this._attributes[key]?.location || null;
+	}
+
+	public getUniformLocation(key: keyof UniformLocations<U>)
+	{
+		return this._uniforms[key]?.location || null;
 	}
 
 	public constructor(gl: WebGLRenderingContext)
@@ -104,7 +136,7 @@ export abstract class Shader<A extends Attributes, U extends Attributes>
 	private getLocations(): LocationsGroup<A, U>
 	{
 		const s = this.vertexSource() + this.fragmentSource();
-		
+
 		const locations = {
 			attributes: {},
 			uniforms: {},
@@ -112,23 +144,46 @@ export abstract class Shader<A extends Attributes, U extends Attributes>
 
 		s.replace(/(\r|\n|\t)/g, "").split(";").forEach((str) => 
 		{
-			const [attributeType, type, name] = str.split(" ");
-			if(attributeType === "attribute" && !locations.attributes[name])
+			const [attributeType, type, name] = str.split(" ") as any;
+			if (attributeType === "attribute" && !locations.attributes[name])
 			{
-				locations.attributes[name as keyof A] = this.gl.getAttribLocation(this.shaderProgram, name);
+				locations.attributes[name as keyof A] = {
+					location: this.gl.getAttribLocation(this.shaderProgram, name),
+					type
+				};
 			}
-			else if(attributeType === "uniform" && !locations.uniforms[name])
-			{	
+			else if (attributeType === "uniform" && !locations.uniforms[name])
+			{
 				const uniformLoc = this.gl.getUniformLocation(this.shaderProgram, name);
 
-				if(!uniformLoc)
-					console.warn(`Could not get uniform location!`);
+				if (!uniformLoc)
+					console.warn(`Could not get uniform location "${name}"!`);
 				else
-					locations.uniforms[name as keyof U] = uniformLoc;
+					locations.uniforms[name as keyof U] = { location: uniformLoc, type };
 			}
 		});
 
 		return locations;
+	}
+
+	public setAttributeBuffer(name: keyof AttributeLocations<A>, buffer: GLBuffer, stride: number = 0, offset: number = 0)
+	{
+		try 
+		{
+
+			const { location, type } = this.getAttribute(name);
+
+			const gl = this.gl;
+
+			buffer.use(gl);
+			gl.vertexAttribPointer(location, Shader.typeToComponentNum(type), gl.FLOAT, false, stride, offset);
+			gl.enableVertexAttribArray(location);
+		}
+		catch (e)
+		{
+			console.error(e);
+			console.warn(name);
+		}
 	}
 
 	public readonly use = () =>
@@ -142,21 +197,32 @@ export abstract class Shader<A extends Attributes, U extends Attributes>
 
 export type ShaderType<T extends Shader<any, any>> = new (gl: WebGLRenderingContext) => T;
 
-export type ShaderAttrType = "float" | "bool" | "vec2" | "vec3" | "vec4" | "mat3" | "mat4";
+export type ShaderAttrType = "float" | "vec2" | "vec3" | "vec4" | "mat2" | "mat3" | "mat4";
+export type ShaderUniformType = "float" | "bool" | "vec2" | "vec3" | "vec4" | "mat2" | "mat3" | "mat4" | "sampler2D";
 
 export type Attributes = {
 	[key: string]: ShaderAttrType;
 };
 
+export type Uniforms = {
+	[key: string]: ShaderUniformType;
+}
+
 type AttributeLocations<T extends Attributes> = {
-	[K in keyof T]: number;
+	[K in keyof T]: {
+		location: number;
+		type: ShaderAttrType;
+	};
 };
 
-type UniformLocations<T extends Attributes> = {
-	[K in keyof T]: WebGLUniformLocation;
+type UniformLocations<T extends Uniforms> = {
+	[K in keyof T]: {
+		location: WebGLUniformLocation;
+		type: ShaderUniformType;
+	};
 };
 
-type LocationsGroup<A extends Attributes, U extends Attributes> = {
+type LocationsGroup<A extends Attributes, U extends Uniforms> = {
 	attributes: AttributeLocations<A>;
 	uniforms: UniformLocations<U>;
 };

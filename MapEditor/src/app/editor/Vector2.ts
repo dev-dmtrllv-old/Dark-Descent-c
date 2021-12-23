@@ -11,6 +11,7 @@ export class Vector2 implements Serializable<VectorData>
 	public static readonly round = (a: Vector2) => new Vector2(Math.round(a.x), Math.round(a.y));
 	public static readonly floor = (a: Vector2) => new Vector2(Math.floor(a.x), Math.floor(a.y));
 	public static readonly ceil = (a: Vector2) => new Vector2(Math.ceil(a.x), Math.ceil(a.y));
+	public static readonly clone = (a: Vector2) => new Vector2(a.x, a.y);
 
 	public static get zero() { return new Vector2(0, 0); }
 
