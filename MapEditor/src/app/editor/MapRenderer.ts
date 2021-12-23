@@ -4,7 +4,6 @@ import { Map } from "./Map"
 import { Shader } from "./Shader";
 import { DefaultShader } from "./shaders/DefaultShader";
 import { Vector2 } from "./Vector2";
-import { mat4 } from "gl-matrix";
 import { CanvasRenderer } from "./CanvasRenderer";
 
 export class MapRenderer
@@ -14,8 +13,6 @@ export class MapRenderer
 	private get shader() { return Shader.get(DefaultShader); }
 	
 	private _buffer: GLBuffer | null = null;
-	
-	private _modelViewMatrix: mat4;
 
 	public get buffer()
 	{
@@ -36,11 +33,6 @@ export class MapRenderer
 	public constructor(map: Map)
 	{
 		this.map = map;
-
-		this._modelViewMatrix = mat4.create();
-		// mat4.identity(this._modelViewMatrix);
-
-		// mat4.translate(this._modelViewMatrix, this._modelViewMatrix, [0.0, 0.0, -6.0]);
 	}
 
 	public render(canvasRenderer: CanvasRenderer)
@@ -55,7 +47,6 @@ export class MapRenderer
 		this.shader.use();
 
 		gl.uniform2fv(this.shader.getUniform("uCanvasSize"), [canvas?.width || 0, canvas?.height || 0]);
-		// gl.uniformMatrix4fv(this.shader.getUniform("uModelViewMatrix"), false, this._modelViewMatrix);
 
 		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
